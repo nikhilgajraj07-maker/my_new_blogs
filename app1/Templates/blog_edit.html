@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Blog{% endblock %}
+
+{% block pagecontent %}
+<div class="container py-4" style="max-width: 800px;">
+  <div class="card border-0 shadow-lg rounded-4" id="editor-card">
+    <div class="card-body p-4">
+      <h2 class="fw-bold text-center mb-4 text-primary">✏️ Edit Blog</h2>
+
+      {% if form.errors %}
+        <div class="alert alert-danger">{{ form.errors }}</div>
+      {% endif %}
+
+      <form method="POST" enctype="multipart/form-data" id="blog-entry-form">
+        {% csrf_token %}
+
+        <div class="mb-4">{{ form.title.label_tag }} {{ form.title }}</div>
+        <div class="mb-4">{{ form.image.label_tag }} {{ form.image }}</div>
+
+        <!-- Hidden Django field to submit HTML -->
+        <textarea name="content" id="id_content" style="display:none;">
+{{ form.content.value|default_if_none:'' }}</textarea>
+
+        <!-- Top controls (match write page) -->
+        <div class="d-flex justify-content-between align-items-center mb-2 emoji-wrap">
+          <div>
+            <button type="button" id="toggle-dark" class="btn btn-sm btn-outline-secondary">🌙 Dark</button>
+            <button type="button" id="emoji-btn" class="btn btn-sm btn-outline-primary ms-2">😀 Emojis</button>
+          </div>
+          <small id="autosave-indicator" class="text-muted">Draft: —</small>
+
+          <!-- Emoji panel -->
+          <div id="emoji-panel" class="emoji-panel" aria-hidden="true"></div>
+        </div>
+
+        <!-- CKEditor mount -->
+        <div id="editor">{{ form.content.value|default_if_none:''|safe }}</div>
+
+        <div id="word-count" class="text-muted small mt-2"></div>
+
+        <!-- Buttons -->
+        <div class="d-flex justify-content-between flex-wrap gap-3 mt-4">
+          <a href="{% url 'all_blogs' %}"
+             class="btn btn-lg btn-gradient-danger rounded-pill px-4 shadow-sm d-flex align-items-center gap-2">
+            ❌ <span>Cancel</span>
+          </a>
+
+          <button type="submit"
+                  class="btn btn-lg btn-gradient-success rounded-pill px-5 shadow-sm d-flex align-items-center gap-2">
+            💾 <span>Save Changes</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Editor-specific styling (doesn't change your page layout) -->
+<style>
+  /* CKEditor box + scroller (same as write page) */
+  .ck.ck-editor { border: 1px solid #ddd; border-radius: 12px; }
+  .ck.ck-toolbar { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+  .ck.ck-editor__main > .ck-editor__editable {
+    min-height: 340px;
+    max-height: 420px;
+    overflow-y: auto;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+  }
+  .ck.ck-editor { display: flex; flex-direction: column; height: 100%; }
+  .ck.ck-toolbar {
+    position: sticky; top: 0; z-index: 50; background: #fff;
+    border-bottom: 1px solid #ddd; box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  }
+
+  /* Dark mode (match write page) */
+  #editor-card.editor-dark .ck.ck-editor { background: #1b1b1b; border-color: #2a2a2a; }
+  #editor-card.editor-dark .ck.ck-toolbar { background: #222; border-color: #2a2a2a; }
+  #editor-card.editor-dark .ck.ck-toolbar .ck-button .ck-button__label { color: #e6e6e6; }
+  #editor-card.editor-dark .ck.ck-toolbar .ck-button .ck-icon { filter: brightness(1.2); }
+  #editor-card.editor-dark .ck-content { background: #121212; color: #e6e6e6; }
+  #editor-card.editor-dark .ck.ck-editor__main { border-color: #2a2a2a; }
+
+  /* Emoji panel (same as write page) */
+  .emoji-wrap { position: relative; }
+  .emoji-panel {
+    display: none; position: absolute; z-index: 20; top: 38px; right: 0;
+    background: #fff; border: 1px solid #ddd; border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 8px;
+    max-width: 300px; max-height: 220px; overflow: auto;
+  }
+  .emoji-panel button {
+    border: none; background: transparent; font-size: 20px; line-height: 1.2;
+    padding: 6px; border-radius: 8px;
+  }
+  .emoji-panel button:hover { background: #f1f3f5; cursor: pointer; }
+
+  /* Modern gradient buttons */
+  .btn-gradient-success {
+    background: linear-gradient(45deg, #28a745, #5cd27e); color: #fff; border: none;
+  }
+  .btn-gradient-success:hover {
+    background: linear-gradient(45deg, #218838, #4bbf6b); color: #fff;
+  }
+  .btn-gradient-danger {
+    background: linear-gradient(45deg, #dc3545, #ff6b6b); color: #fff; border: none;
+  }
+  .btn-gradient-danger:hover {
+    background: linear-gradient(45deg, #b52b38, #e65c5c); color: #fff;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const hiddenField = document.getElementById('id_content');
+  const autosaveEl  = document.getElementById('autosave-indicator');
+  const mountEl     = document.getElementById('editor');
+  const editorCard  = document.getElementById('editor-card');
+  const darkBtn     = document.getElementById('toggle-dark');
+  const wordCountEl = document.getElementById('word-count');
+  const emojiBtn    = document.getElementById('emoji-btn');
+  const emojiPanel  = document.getElementById('emoji-panel');
+
+  // Ensure CKEditor super-build exists (same as write page)
+  if (!(window.CKEDITOR && CKEDITOR.ClassicEditor)) {
+    console.error('CKEditor 5 super-build not loaded (check base.html include).');
+    return;
+  }
+
+  // Theme boot: saved or system
+  const THEME_KEY = 'blog_editor_theme';
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    editorCard.classList.add('editor-dark');
+  }
+  updateDarkButton();
+
+  // Create editor (identical toolbar/config as write page)
+  CKEDITOR.ClassicEditor.create(mountEl, {
+    placeholder: '✍️ Edit your blog...',
+    toolbar: {
+      items: [
+        'heading', '|',
+        'bold', 'italic', 'underline', 'strikethrough', 'link', 'highlight', 'removeFormat', '|',
+        'fontFamily', 'fontSize', 'fontColor', 'fontBackgroundColor', 'alignment', '|',
+        'bulletedList', 'numberedList', 'outdent', 'indent', '|',
+        'blockQuote', 'insertTable', 'mediaEmbed', 'horizontalLine', '|',
+        'specialCharacters', 'findAndReplace', '|',
+        'code', 'codeBlock', 'sourceEditing', '|',
+        'undo', 'redo'
+      ],
+      shouldNotGroupWhenFull: true
+    },
+    image: {
+      toolbar: [
+        'imageTextAlternative', 'toggleImageCaption',
+        'imageStyle:inline', 'imageStyle:block', 'imageStyle:side'
+      ],
+      insert: { type: 'auto' }
+    },
+    table: {
+      contentToolbar: [
+        'tableColumn', 'tableRow', 'mergeTableCells',
+        'tableCellProperties', 'tableProperties'
+      ]
+    },
+    /* Prevent premium/collaboration/AI & licensed plugins (same as write page) */
+    removePlugins: [
+      'CKBox', 'CKFinder', 'EasyImage',
+      'ExportPdf', 'ExportWord',
+      'WProofreader', 'MathType',
+      'SlashCommand', 'Template', 'DocumentOutline', 'FormatPainter', 'TableOfContents',
+      'Pagination', 'MultiLevelList', 'CaseChange', 'CaseChangeEditing',
+      'PresenceList', 'Comments', 'TrackChanges', 'TrackChangesData', 'RevisionHistory',
+      'RealTimeCollaborativeComments', 'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory',
+      'AiAssistant', 'AIAssistant', 'CKEditorAI',
+      'PasteFromOfficeEnhanced', 'Mermaid'
+    ],
+    /* Word count (safe API—no getStats()) */
+    wordCount: {
+      onUpdate: stats => {
+        if (wordCountEl) {
+          wordCountEl.textContent = `Words: ${stats.words} · Characters: ${stats.characters}`;
+        }
+      }
+    }
+  })
+  .then((editor) => {
+    // Preload server value if present
+    if (hiddenField && hiddenField.value) editor.setData(hiddenField.value);
+
+    // Draft restore/save (same key scheme as write page)
+    const blogId  = "{{ form.instance.id|default:'' }}";
+    const draftKey = blogId ? ('blog_draft_' + blogId) : 'blog_draft_edit_new';
+
+    if ((!hiddenField || !hiddenField.value) && localStorage.getItem(draftKey)) {
+      editor.setData(localStorage.getItem(draftKey));
+      if (autosaveEl) autosaveEl.textContent = 'Draft: restored';
+    } else {
+      if (autosaveEl) autosaveEl.textContent = 'Draft: —';
+    }
+
+    let t;
+    editor.model.document.on('change:data', () => {
+      if (hiddenField) hiddenField.value = editor.getData();
+      clearTimeout(t);
+      t = setTimeout(() => {
+        try {
+          localStorage.setItem(draftKey, editor.getData());
+          if (autosaveEl) autosaveEl.textContent = 'Draft: saved locally ✔';
+        } catch (e) {
+          if (autosaveEl) autosaveEl.textContent = 'Draft: unable to save';
+        }
+      }, 400);
+    });
+
+    // Submit: sync hidden field + clear draft
+    const form = document.getElementById('blog-entry-form');
+    if (form) {
+      form.addEventListener('submit', () => {
+        if (hiddenField) hiddenField.value = editor.getData();
+        localStorage.removeItem(draftKey);
+      });
+    }
+
+    // --- Free custom emoji panel (same as write page) ---
+    const EMOJIS = "😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😇 😍 🤩 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤗 🤔 🤨 😐 😑 😶 🙄 😏 😣 😥 😮 🤐 😯 😪 😫 🥱 😴 😌 🤤 😒 😓 😔 😕 🥲 😬 🤥 😶‍🌫️ 🥹 🥰 😻 👍 👎 👏 🙌 🤝 💪 ✍️ ✅ ❌ ✨ ❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 💯 🔥 🎉 🥳 ⭐".split(' ');
+    emojiPanel.innerHTML = EMOJIS.map(e => `<button type="button" aria-label="${e}">${e}</button>`).join('');
+    emojiBtn.addEventListener('click', () => {
+      const showing = emojiPanel.style.display === 'block';
+      emojiPanel.style.display = showing ? 'none' : 'block';
+      emojiPanel.setAttribute('aria-hidden', showing ? 'true' : 'false');
+    });
+    emojiPanel.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('button');
+      if (!btn) return;
+      const ch = btn.textContent;
+      editor.model.change(writer => {
+        editor.model.insertContent(writer.createText(ch), editor.model.document.selection);
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!emojiPanel.contains(e.target) && !emojiBtn.contains(e.target)) {
+        emojiPanel.style.display = 'none';
+        emojiPanel.setAttribute('aria-hidden', 'true');
+      }
+    });
+    // --- End emoji panel ---
+  })
+  .catch((err) => console.error(err));
+
+  // Dark mode toggle (shared with write page)
+  darkBtn.addEventListener('click', () => {
+    editorCard.classList.toggle('editor-dark');
+    localStorage.setItem('blog_editor_theme', editorCard.classList.contains('editor-dark') ? 'dark' : 'light');
+    updateDarkButton();
+  });
+
+  function updateDarkButton() {
+    const dark = editorCard.classList.contains('editor-dark');
+    darkBtn.textContent = dark ? '☀️ Light' : '🌙 Dark';
+    darkBtn.classList.toggle('btn-outline-secondary', !dark);
+    darkBtn.classList.toggle('btn-outline-light', dark);
+  }
+});
+</script>
+{% endblock %}

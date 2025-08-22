@@ -1,0 +1,17 @@
+# Django / Python
+*.pyc
+__pycache__/
+db.sqlite3
+
+# Static build output
+/staticfiles/
+/media/
+
+# Secrets & env
+.env
+*.env
+
+# Editors
+.vscode/
+.idea/
+.DS_Store

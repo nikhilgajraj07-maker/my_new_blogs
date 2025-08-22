@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block pagecontent %}
+<style>
+    /* Animation */
+    .fade-in { animation: fadeIn 0.8s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Card */
+    .custom-card {
+        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+        border-radius: 1.5rem;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .custom-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12); }
+
+    /* Profile image */
+    .profile-wrapper { position: relative; display: inline-block; }
+    .profile-pic {
+        border-radius: 50%;
+        padding: 5px;
+        background: linear-gradient(135deg, #0d6efd, #6610f2);
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        animation: pulseGlow 3s infinite;
+    }
+    @keyframes pulseGlow {
+        0%, 100% { box-shadow: 0 0 15px rgba(13,110,253,0.4); }
+        50% { box-shadow: 0 0 25px rgba(102,16,242,0.6); }
+    }
+    .profile-pic img { border-radius: 50%; object-fit: cover; display: block; }
+    .profile-wrapper:hover .profile-pic { transform: scale(1.05); }
+
+    /* Camera overlay */
+    .camera-overlay {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: rgba(13,110,253,0.9);
+        color: white;
+        border-radius: 50%;
+        padding: 8px;
+        font-size: 18px;
+        border: 3px solid white;
+        opacity: 0;
+        transform: scale(0.8);
+        cursor: pointer;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .profile-wrapper:hover .camera-overlay { opacity: 1; transform: scale(1); }
+
+    /* Save button (updated) */
+    .save-btn {
+        background: linear-gradient(90deg, #0d6efd, #6610f2);
+        border: none;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 15px rgba(102, 16, 242, 0.4);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .save-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: skewX(-20deg);
+        transition: left 0.5s ease;
+    }
+    .save-btn:hover::before { left: 100%; }
+    .save-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(102, 16, 242, 0.6);
+    }
+
+    /* Back link (updated) */
+    .back-link {
+        display: inline-block;
+        padding: 8px 18px;
+        background: linear-gradient(90deg, #6c757d, #495057);
+        color: white !important;
+        border-radius: 50px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    }
+    .back-link:hover {
+        background: linear-gradient(90deg, #495057, #343a40);
+        transform: scale(1.05);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Form fields */
+    .form-control {
+        border-radius: 10px !important;
+        padding: 10px !important;
+        border: 1px solid #ced4da !important;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .form-control:focus {
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 8px rgba(13, 110, 253, 0.3) !important;
+    }
+</style>
+
+<div class="container py-5 fade-in" style="max-width: 600px;">
+    <div class="card custom-card border-0">
+        <div class="card-body p-4 text-center">
+            <h2 class="fw-bold text-center mb-4 text-primary">✏️ Edit Profile</h2>
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Profile Image Section -->
+                <div class="mb-4 profile-wrapper">
+                    <div class="profile-pic">
+                        <img id="profilePreview" src="{{ user.profile.image.url }}" alt="Profile Image" width="140" height="140">
+                    </div>
+                    <div class="camera-overlay" onclick="document.getElementById('id_image').click();">
+                        📷
+                    </div>
+                </div>
+
+                <!-- Hidden file input -->
+                <input type="file" name="image" id="id_image" accept="image/*" style="display:none;" onchange="previewImage(event)">
+
+                <!-- Editable Fields -->
+                <div class="mb-3 text-start">
+                    <label for="id_first_name" class="form-label fw-semibold">First Name</label>
+                    <input type="text" name="first_name" id="id_first_name" value="{{ user.first_name }}" class="form-control">
+                </div>
+
+                <div class="mb-3 text-start">
+                    <label for="id_last_name" class="form-label fw-semibold">Last Name</label>
+                    <input type="text" name="last_name" id="id_last_name" value="{{ user.last_name }}" class="form-control">
+                </div>
+
+                <div class="mb-3 text-start">
+                    <label for="id_email" class="form-label fw-semibold">Email</label>
+                    <input type="email" name="email" id="id_email" value="{{ user.email }}" class="form-control">
+                </div>
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-lg rounded-pill save-btn text-white">
+                         Save Changes
+                    </button>
+                </div>
+            </form>
+
+            <div class="text-center mt-4">
+                <a href="{% url 'profile' %}" class="back-link">
+                    ← Back to Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Preview new image instantly
+    function previewImage(event) {
+        const reader = new FileReader();
+        reader.onload = function(){
+            document.getElementById('profilePreview').src = reader.result;
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    }
+</script>
+{% endblock %}

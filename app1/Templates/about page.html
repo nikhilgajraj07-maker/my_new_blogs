@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}About Us{% endblock %}
+
+{% block pagecontent %}
+<style>
+    /* Banner Styling */
+    .about-banner {
+        background: url('https://source.unsplash.com/1600x500/?blog,writing') center/cover no-repeat;
+        height: 300px;
+        border-radius: 12px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-shadow: 0 3px 6px rgba(0,0,0,0.4);
+        margin-bottom: 40px;
+        overflow: hidden;
+        animation: fadeIn 1.2s ease-in-out;
+    }
+    .about-banner::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom right, rgba(0,0,0,0.3), rgba(0,0,0,0.5));
+        z-index: 0;
+    }
+    .about-banner h1 {
+        font-size: 2.8rem;
+        font-weight: 700;
+        position: relative;
+        z-index: 1;
+        animation: floatText 3s ease-in-out infinite;
+        text-align: center; /* Keep centered for mobile too */
+        padding: 0 15px;
+    }
+    .about-banner img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1);
+        animation: zoomBanner 12s ease-in-out infinite alternate;
+    }
+
+    /* Cards Styling */
+    .about-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        margin-bottom: 20px;
+        animation: fadeUp 0.8s ease-in-out forwards;
+        opacity: 0;
+    }
+    .about-card:nth-child(2) { animation-delay: 0.2s; }
+    .about-card:nth-child(3) { animation-delay: 0.4s; }
+    .about-card:nth-child(4) { animation-delay: 0.6s; }
+
+    .about-card:hover {
+        transform: translateY(-4px) scale(1.01);
+        box-shadow: 0 6px 25px rgba(74, 144, 226, 0.25);
+    }
+    .about-card h2 {
+        color: #4a90e2;
+        font-weight: 700;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        position: relative;
+        flex-wrap: wrap; /* Added from first version */
+    }
+    .about-card h2::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -5px;
+        width: 50px;
+        height: 3px;
+        background: linear-gradient(to right, #4a90e2, #7ab6f0);
+        border-radius: 3px;
+    }
+    .about-card p {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #555;
+        word-break: break-word; /* Added from first version */
+    }
+    .about-icon {
+        color: #4a90e2;
+        font-size: 1.4rem;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes fadeUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes floatText {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+    @keyframes zoomBanner {
+        from { transform: scale(1); }
+        to { transform: scale(1.08); }
+    }
+</style>
+
+<div class="container py-5">
+
+    <!-- Banner Section -->
+    <div class="about-banner">
+        <h1>About Us</h1>
+    </div>
+
+    <!-- Card Content -->
+    <div class="about-card">
+        <h2><i class="fas fa-users about-icon"></i> Who We Are</h2>
+        <p>
+            Welcome to <strong>MY BLOGS</strong> — your go-to destination for engaging, informative, 
+            and inspiring blog content. Whether you’re here to learn, explore, or share ideas, 
+            we’re dedicated to delivering posts that spark curiosity and add value to your day.
+        </p>
+    </div>
+
+    <div class="about-card">
+        <h2><i class="fas fa-bullseye about-icon"></i> Our Mission</h2>
+        <p>
+            Our platform was created with a simple goal: to make blogging a space where everyone can 
+            express themselves freely and connect with like-minded readers. From technology and lifestyle 
+            tips to personal stories and expert advice, our diverse topics ensure there’s something for everyone.
+        </p>
+    </div>
+
+    <div class="about-card">
+        <h2><i class="fas fa-heart about-icon"></i> Our Values</h2>
+        <p>
+            At the core of <strong>MY BLOGS</strong> is a community that values authenticity, creativity, 
+            and meaningful conversations. We believe every voice matters, and every story has the power to inspire.
+        </p>
+        <p>
+            Thank you for being part of our journey. Let’s keep writing, reading, and growing together! 🌟
+        </p>
+    </div>
+</div>
+
+<!-- Font Awesome Icons -->
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+{% endblock %}

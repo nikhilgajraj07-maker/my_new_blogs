@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Delete Blog{% endblock %}
+
+{% block pagecontent %}
+<div class="container-custom">
+    <h2 class="text-danger text-center mb-3">Delete Blog</h2>
+    <p class="text-center">
+        Are you sure you want to delete the blog <strong>{{ blog.title }}</strong>?
+    </p>
+    <form method="post" class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger px-4">Yes, Delete</button>
+        <a href="{% url 'all_blogs' %}" class="btn btn-secondary px-4">Cancel</a>
+    </form>
+</div>
+{% endblock %}

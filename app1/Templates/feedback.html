@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Feedback{% endblock %}
+
+{% block pagecontent %}
+<style>
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .feedback-form {
+        background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        max-width: 600px;
+        width: 100%;
+        animation: fadeInUp 0.6s ease-out;
+    }
+    .feedback-form:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    }
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 8px rgba(0, 123, 255, 0.4);
+    }
+    .btn-primary {
+        padding: 12px 20px;
+        font-weight: 500;
+        background: linear-gradient(90deg, #007bff, #0056b3);
+        border: none;
+        transition: 0.3s ease;
+        border-radius: 8px;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #0056b3, #00408a);
+        transform: scale(1.03);
+    }
+    .feedback-heading {
+        font-weight: 700;
+        font-size: 1.9rem;
+        color: #333;
+        text-align: center;
+        margin-bottom: 25px;
+        position: relative;
+    }
+    .feedback-heading::after {
+        content: "";
+        display: block;
+        width: 60px;
+        height: 3px;
+        background: #007bff;
+        margin: 8px auto 0;
+        border-radius: 2px;
+    }
+    .form-label {
+        font-weight: 500;
+        color: #444;
+    }
+</style>
+
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="feedback-form">
+        <h2 class="feedback-heading">Feedback</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if not messages or not messages.0.tags == "success" %}
+        <form method="post" action="{% url 'feedback' %}">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="name" class="form-label">
+                    <i class="bi bi-person"></i> Your Name
+                </label>
+                <input type="text"
+                       class="form-control"
+                       id="name"
+                       name="name"
+                       placeholder="Enter your name"
+                       autocomplete="off"
+                       required
+                       value="{% if request.user.is_authenticated %}{{ request.user.get_full_name|default:request.user.username }}{% endif %}">
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">
+                    <i class="bi bi-envelope"></i> Your Email
+                </label>
+                <input type="email"
+                       class="form-control"
+                       id="email"
+                       name="email"
+                       placeholder="Enter your email"
+                       autocomplete="off"
+                       required
+                       value="{% if request.user.is_authenticated %}{{ request.user.email }}{% endif %}">
+            </div>
+
+            <div class="mb-3">
+                <label for="message" class="form-label">
+                    <i class="bi bi-chat-dots"></i> Your Feedback
+                </label>
+                <textarea class="form-control"
+                          id="message"
+                          name="message"
+                          rows="5"
+                          placeholder="Write your feedback here..."
+                          autocomplete="off"
+                          required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-send"></i> Submit Feedback
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

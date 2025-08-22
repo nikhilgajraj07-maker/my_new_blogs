@@ -1,0 +1,54 @@
+{% for blog in blogs %}
+<div class="col-12 mb-3 blog-item">
+    <div class="card h-100 shadow-lg border-0 rounded-3 overflow-hidden" style="transition: transform 0.2s;">
+        
+        <div class="position-relative">
+            {% if blog.image %}
+                <img src="{{ blog.image.url }}" class="card-img-top" alt="{{ blog.title }}" style="height: 200px; object-fit: cover;">
+            {% endif %}
+            <span class="badge bg-dark position-absolute top-0 end-0 m-2 px-2 py-1" style="opacity: 0.85;">
+                {{ blog.author }}
+            </span>
+        </div>
+        
+        <div class="card-body">
+            <h5 class="card-title text-primary fw-bold">{{ blog.title }}</h5>
+            <p class="card-text text-muted small">
+                <a href="{% url 'single_blog' blog.id %}" target="_blank" class="text-decoration-none">
+                    {{ blog.content|truncatewords:15|safe }}
+                </a>
+            </p>
+        </div>
+        
+        <div class="card-footer bg-light d-flex justify-content-between border-0">
+            <a href="{% url 'blog_edit' blog.id %}" class="btn btn-outline-warning btn-sm">✏ Edit</a>
+            <a href="{% url 'blog_delete' blog.id %}" class="btn btn-outline-danger btn-sm"
+               onclick="return confirm('Are you sure you want to delete this blog?');">
+               🗑 Delete
+            </a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const btn = document.getElementById("see-more-btn");
+    if (btn) {
+        btn.addEventListener("click", function() {
+            const offset = document.querySelectorAll(".blog-item").length;
+            fetch(`/load-more-blogs/?offset=${offset}`)
+                .then(response => response.text())
+                .then(data => {
+                    if (data.trim() === "") {
+                        btn.style.display = "none";
+                    } else {
+                        document.getElementById("blog-list").insertAdjacentHTML("beforeend", data);
+                        btn.style.display = "none"; // Hide button after loading all blogs
+                    }
+                })
+                .catch(err => console.error("Error loading more blogs:", err));
+        });
+    }
+});
+</script>
