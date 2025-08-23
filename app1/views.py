@@ -299,11 +299,11 @@ User = get_user_model()
 
 def make_admin(request):
     try:
-        if not User.objects.filter(username="admin").exists():
+        if not User.objects.filter(username="nikhil_choudhary").exists():
             User.objects.create_superuser(
-                username="admin",
-                email="admin@example.com",
-                password="yourpassword"
+                username="nikhil_choudhary",
+                email="nikhilchoudhary07@gmail.com",
+                password="Nikki@1420(#)"
             )
             return HttpResponse("✅ Superuser created")
         else:
