@@ -306,12 +306,19 @@ def import_data(request):
 def upload_image(request):
     if request.method == "POST" and request.FILES.get("upload"):
         upload = request.FILES["upload"]
-        result = cloudinary.uploader.upload(upload)
-        url = result["secure_url"]
-
-        return JsonResponse({
-            "uploaded": 1,
-            "fileName": upload.name,
-            "url": url
-        })
-    return JsonResponse({"uploaded": 0, "error": {"message": "Upload failed"}}, status=400)
+        try:
+            result = cloudinary.uploader.upload(upload)
+            return JsonResponse({
+                "uploaded": 1,
+                "fileName": upload.name,
+                "url": result["secure_url"]
+            })
+        except Exception as e:
+            return JsonResponse({
+                "uploaded": 0,
+                "error": {"message": str(e)}
+            }, status=400)
+    return JsonResponse({
+        "uploaded": 0,
+        "error": {"message": "No file received"}
+    }, status=400)
