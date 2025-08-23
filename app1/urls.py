@@ -3,6 +3,7 @@ from django.contrib.auth import views as auth_views
 from . import views
 from .views import CustomLoginView, custom_logout_view, contact_view
 from .views import import_data
+from .views import upload_image
 
 urlpatterns = [
     # Home pages
@@ -27,6 +28,8 @@ urlpatterns = [
     path('blog/', views.blog_view, name='blog_view'),
     path('blog/', views.blog_view, name='blog'),
     path('blog_page/', views.blog_view, name='blog_page'),
+    path("upload/", upload_image, name="upload_image"),
+    path("upload/", ckeditor_image_upload, name="ckeditor_image_upload"),
     path("blogs/<int:blog_id>/", views.blog_detail, name="blog_detail"),
     path("blogs/<int:blog_id>/comment/", views.add_comment, name="add_comment"),
     path("comments/<int:pk>/delete/", views.delete_comment, name="delete_comment"),

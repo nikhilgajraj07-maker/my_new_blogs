@@ -8,6 +8,7 @@ from django.core.files.storage import default_storage
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.decorators.http import require_POST
 from django.core.management import call_command
+import cloudinary.uploader
 
 from .models import Blogs, ContactMessage, Feedback, Profile, Comment
 from .forms import BlogsForms, SignUpForm, ProfileForm
@@ -298,3 +299,49 @@ def import_data(request):
         return HttpResponse("✅ Data imported successfully!")
     except Exception as e:
         return HttpResponse(f"❌ Error: {e}")
+
+
+@csrf_exempt
+def upload_image(request):
+    """
+    Handle CKEditor uploads (toolbar, paste, drag-drop).
+    """
+    if request.method == "POST":
+        upload = request.FILES.get("upload") or request.FILES.get("file")
+        if not upload:
+            return JsonResponse({"error": "No file uploaded"}, status=400)
+
+        try:
+            # Upload to Cloudinary
+            result = cloudinary.uploader.upload(upload)
+
+            return JsonResponse({
+                "url": result["secure_url"]  # CKEditor expects "url"
+            })
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+FOLDER = "blogs/ckeditor"  # change if you like; Cloudinary will auto-create folders
+
+@require_POST
+def ckeditor_image_upload(request):
+    """
+    Receives a file from CKEditor 5 SimpleUploadAdapter and returns JSON: {"url": "<cloudinary secure url>"}.
+    Supports toolbar upload, paste, and drag-drop.
+    """
+    upload = request.FILES.get("upload") or request.FILES.get("file")
+    if not upload:
+        return JsonResponse({"error": {"message": "No file uploaded"}}, status=400)
+
+    try:
+        result = cloudinary.uploader.upload(
+            upload,
+            folder=FOLDER,           # keep assets organized
+            resource_type="image",   # ensure images
+            overwrite=False
+        )
+        return JsonResponse({"url": result["secure_url"]})
+    except Exception as e:
+        return JsonResponse({"error": {"message": str(e)}}, status=400)

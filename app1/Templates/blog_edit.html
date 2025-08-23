@@ -137,7 +137,15 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   updateDarkButton();
 
-  // Create editor (identical toolbar/config as write page)
+  // CSRF from cookie for AJAX upload
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+  const CSRF = getCookie('csrftoken');
+
+  // Create editor (identical toolbar/config as your write page, + image buttons)
   CKEDITOR.ClassicEditor.create(mountEl, {
     placeholder: '✍️ Edit your blog...',
     toolbar: {
@@ -147,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
         'fontFamily', 'fontSize', 'fontColor', 'fontBackgroundColor', 'alignment', '|',
         'bulletedList', 'numberedList', 'outdent', 'indent', '|',
         'blockQuote', 'insertTable', 'mediaEmbed', 'horizontalLine', '|',
+        'uploadImage', 'imageInsert', '|',    // << added
         'specialCharacters', 'findAndReplace', '|',
         'code', 'codeBlock', 'sourceEditing', '|',
         'undo', 'redo'
@@ -159,6 +168,14 @@ document.addEventListener('DOMContentLoaded', function () {
         'imageStyle:inline', 'imageStyle:block', 'imageStyle:side'
       ],
       insert: { type: 'auto' }
+    },
+    // CKEditor SimpleUpload adapter -> Django endpoint (handles toolbar, paste, drag-drop)
+    simpleUpload: {
+      uploadUrl: '/upload/',
+      headers: {
+        'X-CSRFToken': CSRF,
+        'X-Requested-With': 'XMLHttpRequest'
+      }
     },
     table: {
       contentToolbar: [
