@@ -304,21 +304,35 @@ def import_data(request):
 
 @csrf_exempt
 def upload_image(request):
-    if request.method == "POST" and request.FILES.get("upload"):
-        upload = request.FILES["upload"]
-        try:
-            result = cloudinary.uploader.upload(upload)
+    """
+    Accepts POST uploads from CKEditor (field name 'upload') and uploads to Cloudinary.
+    Returns JSON compatible with CKEditor 5 SimpleUploadAdapter ({"url": ...})
+    and includes legacy fields ("uploaded": 1, "fileName": ...) for CKEditor 4 compatibility.
+    """
+    if request.method == "POST":
+        upload = request.FILES.get("upload") or request.FILES.get("file") or None
+        if not upload:
             return JsonResponse({
+                "uploaded": 0,
+                "error": {"message": "No file received"}
+            }, status=400)
+        try:
+            # Upload to Cloudinary (your Cloudinary config in settings.py stays the same)
+            result = cloudinary.uploader.upload(upload)
+            uploaded_url = result.get("secure_url") or result.get("url")
+            # Return both CKEditor 5 friendly response and legacy fields
+            return JsonResponse({
+                "url": uploaded_url,
                 "uploaded": 1,
-                "fileName": upload.name,
-                "url": result["secure_url"]
+                "fileName": upload.name
             })
         except Exception as e:
             return JsonResponse({
                 "uploaded": 0,
                 "error": {"message": str(e)}
             }, status=400)
+
     return JsonResponse({
         "uploaded": 0,
-        "error": {"message": "No file received"}
+        "error": {"message": "Invalid request method"}
     }, status=400)
