@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const emojiBtn    = document.getElementById('emoji-btn');
   const emojiPanel  = document.getElementById('emoji-panel');
 
-  // Ensure CKEditor super-build exists (same as write page)
+  // Ensure CKEditor 5 super-build exists (loaded in base.html)
   if (!(window.CKEDITOR && CKEDITOR.ClassicEditor)) {
     console.error('CKEditor 5 super-build not loaded (check base.html include).');
     return;
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   updateDarkButton();
 
-  // CSRF from cookie for AJAX upload
+  // CSRF from cookie for AJAX upload (safer than injecting {{ csrf_token }} into headers)
   function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   const CSRF = getCookie('csrftoken');
 
-  // Create editor (identical toolbar/config as your write page, + image buttons)
+  // Create editor (identical toolbar/config, plus image upload buttons)
   CKEDITOR.ClassicEditor.create(mountEl, {
     placeholder: '✍️ Edit your blog...',
     toolbar: {
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
         'fontFamily', 'fontSize', 'fontColor', 'fontBackgroundColor', 'alignment', '|',
         'bulletedList', 'numberedList', 'outdent', 'indent', '|',
         'blockQuote', 'insertTable', 'mediaEmbed', 'horizontalLine', '|',
-        'uploadImage', 'imageInsert', '|',    // << added
+        'uploadImage', 'imageInsert', '|',   // ✅ enable upload buttons
         'specialCharacters', 'findAndReplace', '|',
         'code', 'codeBlock', 'sourceEditing', '|',
         'undo', 'redo'
@@ -169,11 +169,11 @@ document.addEventListener('DOMContentLoaded', function () {
       ],
       insert: { type: 'auto' }
     },
-    // CKEditor SimpleUpload adapter -> Django endpoint (handles toolbar, paste, drag-drop)
+    /* Simple upload → Django endpoint (works for toolbar, paste, drag-drop) */
     simpleUpload: {
-      uploadUrl: "{% url 'ckeditor_image_upload' %}", 
+      uploadUrl: "{% url 'upload_image' %}",   // ✅ use your named URL
       headers: {
-        'X-CSRFToken': CSRF,
+        'X-CSRFToken': CSRF,                   // ✅ CSRF for Django
         'X-Requested-With': 'XMLHttpRequest'
       }
     },
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
         'tableCellProperties', 'tableProperties'
       ]
     },
-    /* Prevent premium/collaboration/AI & licensed plugins (same as write page) */
+    /* Prevent premium/collaboration/AI & licensed plugins */
     removePlugins: [
       'CKBox', 'CKFinder', 'EasyImage',
       'ExportPdf', 'ExportWord',
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Preload server value if present
     if (hiddenField && hiddenField.value) editor.setData(hiddenField.value);
 
-    // Draft restore/save (same key scheme as write page)
+    // Draft restore/save
     const blogId  = "{{ form.instance.id|default:'' }}";
     const draftKey = blogId ? ('blog_draft_' + blogId) : 'blog_draft_edit_new';
 
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }
 
-    // --- Free custom emoji panel (same as write page) ---
+    // --- Free custom emoji panel ---
     const EMOJIS = "😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😇 😍 🤩 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤗 🤔 🤨 😐 😑 😶 🙄 😏 😣 😥 😮 🤐 😯 😪 😫 🥱 😴 😌 🤤 😒 😓 😔 😕 🥲 😬 🤥 😶‍🌫️ 🥹 🥰 😻 👍 👎 👏 🙌 🤝 💪 ✍️ ✅ ❌ ✨ ❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 💯 🔥 🎉 🥳 ⭐".split(' ');
     emojiPanel.innerHTML = EMOJIS.map(e => `<button type="button" aria-label="${e}">${e}</button>`).join('');
     emojiBtn.addEventListener('click', () => {

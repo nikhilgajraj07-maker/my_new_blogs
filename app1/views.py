@@ -304,44 +304,17 @@ def import_data(request):
 @csrf_exempt
 def upload_image(request):
     """
-    Handle CKEditor uploads (toolbar, paste, drag-drop).
+    Handles CKEditor image upload and stores in Cloudinary.
     """
-    if request.method == "POST":
-        upload = request.FILES.get("upload") or request.FILES.get("file")
-        if not upload:
-            return JsonResponse({"error": "No file uploaded"}, status=400)
-
+    if request.method == "POST" and request.FILES.get("upload"):
+        image = request.FILES["upload"]
         try:
-            # Upload to Cloudinary
-            result = cloudinary.uploader.upload(upload)
-
+            result = cloudinary.uploader.upload(image)
             return JsonResponse({
-                "url": result["secure_url"]  # CKEditor expects "url"
+                "uploaded": 1,
+                "fileName": image.name,
+                "url": result["secure_url"]
             })
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
-
-FOLDER = "blogs/ckeditor"  # change if you like; Cloudinary will auto-create folders
-
-@require_POST
-def ckeditor_image_upload(request):
-    """
-    Receives a file from CKEditor 5 SimpleUploadAdapter and returns JSON: {"url": "<cloudinary secure url>"}.
-    Supports toolbar upload, paste, and drag-drop.
-    """
-    upload = request.FILES.get("upload") or request.FILES.get("file")
-    if not upload:
-        return JsonResponse({"error": {"message": "No file uploaded"}}, status=400)
-
-    try:
-        result = cloudinary.uploader.upload(
-            upload,
-            folder=FOLDER,           # keep assets organized
-            resource_type="image",   # ensure images
-            overwrite=False
-        )
-        return JsonResponse({"url": result["secure_url"]})
-    except Exception as e:
-        return JsonResponse({"error": {"message": str(e)}}, status=400)
+            return JsonResponse({"uploaded": 0, "error": {"message": str(e)}})
+    return JsonResponse({"uploaded": 0, "error": {"message": "Invalid request"}})
