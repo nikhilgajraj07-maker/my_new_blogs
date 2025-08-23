@@ -1,6 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from .views import make_admin 
 from .views import CustomLoginView, custom_logout_view, contact_view
 
 urlpatterns = [
