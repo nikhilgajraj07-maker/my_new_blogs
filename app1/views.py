@@ -7,9 +7,7 @@ from django.contrib import messages
 from django.core.files.storage import default_storage
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.decorators.http import require_POST
-from django.contrib.auth import get_user_model
-import traceback
-import logging
+from django.core.management import call_command
 
 from .models import Blogs, ContactMessage, Feedback, Profile, Comment
 from .forms import BlogsForms, SignUpForm, ProfileForm
@@ -294,21 +292,9 @@ def toggle_bookmark(request, pk):
         bookmarked = True
     return JsonResponse({"bookmarked": bookmarked})
 
-logger = logging.getLogger(__name__)
-User = get_user_model()
-
-def make_admin(request):
+def import_data(request):
     try:
-        if not User.objects.filter(username="nikhil_choudhary").exists():
-            User.objects.create_superuser(
-                username="nikhil_choudhary",
-                email="nikhilchoudhary07@gmail.com",
-                password="Nikki@1420(#)"
-            )
-            return HttpResponse("✅ Superuser created")
-        else:
-            return HttpResponse("⚠️ Admin already exists")
+        call_command("loaddata", "data.json")
+        return HttpResponse("✅ Data imported successfully!")
     except Exception as e:
-        error_details = traceback.format_exc()
-        logger.error("❌ Error in make_admin: %s\n%s", str(e), error_details)
-        return HttpResponse("❌ Internal Error — check Render logs")
+        return HttpResponse(f"❌ Error: {e}")
