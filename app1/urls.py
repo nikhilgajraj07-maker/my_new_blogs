@@ -4,6 +4,7 @@ from . import views
 from .views import CustomLoginView, custom_logout_view, contact_view
 from .views import import_data
 from .views import upload_image
+from .views import ckeditor_image_upload
 
 urlpatterns = [
     # Home pages
