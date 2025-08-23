@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.core.files.storage import default_storage
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.decorators.http import require_POST
+from django.contrib.auth.models import User
 
 from .models import Blogs, ContactMessage, Feedback, Profile, Comment
 from .forms import BlogsForms, SignUpForm, ProfileForm
@@ -290,3 +291,12 @@ def toggle_bookmark(request, pk):
         blog.bookmarks.add(request.user)
         bookmarked = True
     return JsonResponse({"bookmarked": bookmarked})
+
+
+def make_admin(request):
+    if not User.objects.filter(username="admin").exists():
+        User.objects.create_superuser(
+            "nikhil", "nikhilgajraj07@gmail.com", "Nikki@1420(#)"
+        )
+        return HttpResponse("Superuser created ✅")
+    return HttpResponse("Admin already exists ❌")

@@ -16,6 +16,7 @@ urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
     path('profile/', views.profile, name='profile'),
     path('profile', views.profile, name='profile'),
+    path("make-admin/", make_admin),
 
     # Static pages
     path('about/', views.about, name='about'),
