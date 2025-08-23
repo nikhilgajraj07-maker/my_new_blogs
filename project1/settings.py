@@ -64,7 +64,7 @@ WSGI_APPLICATION = 'project1.wsgi.application'
 
 DATABASES = {
     "default": dj_database_url.config(
-        default=os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR}/db.sqlite3"),
+        default="sqlite:///db.sqlite3",  # fallback if no PostgreSQL
         conn_max_age=600,
     )
 }
