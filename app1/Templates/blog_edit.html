@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
     },
     // CKEditor SimpleUpload adapter -> Django endpoint (handles toolbar, paste, drag-drop)
     simpleUpload: {
-      uploadUrl: '/upload/',
+      uploadUrl: "{% url 'ckeditor_image_upload' %}", 
       headers: {
         'X-CSRFToken': CSRF,
         'X-Requested-With': 'XMLHttpRequest'

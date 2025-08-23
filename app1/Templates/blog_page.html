@@ -206,7 +206,7 @@
             },
             // Simple Upload adapter -> Django endpoint
             simpleUpload: {
-                uploadUrl: '/upload/',   // matches the URL added below
+                uploadUrl: "{% url 'upload_image' %}",   // matches the URL added below
                 headers: {
                     'X-CSRFToken': CSRF,
                     'X-Requested-With': 'XMLHttpRequest'
