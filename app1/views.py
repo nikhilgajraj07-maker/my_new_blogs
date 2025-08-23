@@ -301,20 +301,17 @@ def import_data(request):
         return HttpResponse(f"❌ Error: {e}")
 
 
+
 @csrf_exempt
 def upload_image(request):
-    """
-    Handles CKEditor image upload and stores in Cloudinary.
-    """
     if request.method == "POST" and request.FILES.get("upload"):
-        image = request.FILES["upload"]
-        try:
-            result = cloudinary.uploader.upload(image)
-            return JsonResponse({
-                "uploaded": 1,
-                "fileName": image.name,
-                "url": result["secure_url"]
-            })
-        except Exception as e:
-            return JsonResponse({"uploaded": 0, "error": {"message": str(e)}})
-    return JsonResponse({"uploaded": 0, "error": {"message": "Invalid request"}})
+        upload = request.FILES["upload"]
+        result = cloudinary.uploader.upload(upload)
+        url = result["secure_url"]
+
+        return JsonResponse({
+            "uploaded": 1,
+            "fileName": upload.name,
+            "url": url
+        })
+    return JsonResponse({"uploaded": 0, "error": {"message": "Upload failed"}}, status=400)

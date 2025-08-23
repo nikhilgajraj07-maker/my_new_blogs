@@ -102,6 +102,8 @@ CKEDITOR_CONFIGS = {
         "toolbar": "full",
         "height": 400,
         "width": "100%",
+        "extraPlugins": ",".join(["uploadimage"]), 
+        "filebrowserUploadUrl": "/upload/",  
     },
 }
 
