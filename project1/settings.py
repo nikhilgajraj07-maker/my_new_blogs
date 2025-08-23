@@ -94,7 +94,7 @@ cloudinary.config(
 
 
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-
+CLOUDINARY_URL="cloudinary://543936563312716:PaN_LyQZfrTWrZClf7oOiQ8SBKU@djyvf2bst?secure=true"
 
 CKEDITOR_UPLOAD_PATH = "uploads/"
 
