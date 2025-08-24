@@ -4,38 +4,38 @@
 {% block pagecontent %}
 <div class="container mt-4" style="max-width: 950px; margin: auto;">
 
-  
-    <div class="card shadow-lg border-0 p-4" 
+    <div class="card shadow-lg border-0 p-4"
          style="border-radius: 14px; background: linear-gradient(to bottom, #ffffff, #f8f9fa);">
 
         <!-- Blog Title -->
-        <h1 class="text-center mb-3 fw-bold" 
+        <h1 class="text-center mb-3 fw-bold"
             style="letter-spacing: 1px; font-size: 2rem; color: #222;">
             {{ blog.title }}
         </h1>
 
         <!-- Author & Date -->
-        <p class="text-muted text-center mb-4" 
+        <p class="text-muted text-center mb-4"
            style="font-size: 0.95rem; font-style: italic;">
             ✍ By <strong>
                 {% if blog.author.get_full_name %}{{ blog.author.get_full_name }}{% else %}{{ blog.author.username }}{% endif %}
-            </strong> 
-            <span class="mx-2">•</span> 
+            </strong>
+            <span class="mx-2">•</span>
             📅 {{ blog.created_at|date:"F j, Y" }}
         </p>
 
-        <!-- Blog Image -->
+        <!-- Blog Cover Image -->
         {% if blog.image %}
             <div class="mb-4 rounded overflow-hidden shadow-sm" style="max-height: 420px;">
-                <img src="{{ blog.image.url }}" 
-                     alt="{{ blog.title }}" 
+                <img src="{{ blog.image.url }}"
+                     alt="{{ blog.title }}"
                      class="img-fluid w-100 blog-img"
                      style="object-fit: cover; transition: transform 0.4s ease;">
             </div>
         {% endif %}
 
         <!-- Blog Content -->
-        <div class="p-4 rounded shadow-sm reading-box mb-4" 
+        <!-- added class `blog-content` to scope image rules to post body -->
+        <div class="p-4 rounded shadow-sm reading-box mb-4 blog-content"
              style="background: #ffffff; border: 1px solid #e9ecef; line-height: 1.8; font-size: 1.05rem; color: #333; text-align: justify;">
             {{ blog.content|safe }}
         </div>
@@ -46,18 +46,20 @@
                 <a href="{% url 'blog_edit' blog.id %}" class="btn btn-warning px-4 fw-semibold shadow-sm">
                     ✏ Edit
                 </a>
-                <a href="{% url 'blog_delete' blog.id %}" 
-                   class="btn btn-danger px-4 fw-semibold shadow-sm"
-                   onclick="return confirm('Are you sure you want to delete this blog?');">
-                    🗑 Delete
-                </a>
+                <form method="POST" action="{% url 'blog_delete' blog.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger px-4 fw-semibold shadow-sm"
+                            onclick="return confirm('Are you sure you want to delete this blog?');">
+                        🗑 Delete
+                    </button>
+                </form>
             {% endif %}
             <a href="{% url 'all_blogs' %}" class="btn btn-secondary px-4 fw-semibold shadow-sm">
                 ⬅ Back to Blogs
             </a>
         </div>
 
-        <!-- 💟 Reactions (Like / Save / Share) -->
+        <!-- Reactions (Like / Save / Share) -->
         <div class="d-flex justify-content-center flex-wrap gap-3 mt-4">
             <!-- Like -->
             <button type="button"
@@ -137,7 +139,7 @@
 </div>
 
 <style>
-    /* Hover zoom for image */
+    /* Hover zoom for cover image */
     .blog-img:hover {
         transform: scale(1.05);
     }
@@ -162,8 +164,76 @@
         padding-top: 4px;
     }
 
-    /* Reactions styling */
-    .reaction-btn { 
+    /* ========= CKEditor / inline image alignment & responsive rules ========= */
+
+    /* Base: keep images responsive and visually neat */
+    .blog-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        display: inline-block; /* let float/display styles apply from editor */
+    }
+
+    /* Float left (editor may insert style="float:left") */
+    .blog-content img[style*="float:left"] {
+        float: left;
+        margin: 10px 20px 10px 0;
+        max-width: 45%; /* keep a reasonable width for float */
+    }
+
+    /* Float right (editor may insert style="float:right") */
+    .blog-content img[style*="float:right"] {
+        float: right;
+        margin: 10px 0 10px 20px;
+        max-width: 45%;
+    }
+
+    /* Centered images (editor may use display:block; margin:auto) */
+    .blog-content img[style*="display:block"],
+    .blog-content img[style*="margin-left:auto"],
+    .blog-content img[style*="margin-right:auto"]{
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+        max-width: 90%;
+    }
+
+    /* Allow images inserted as <figure> to be styled too */
+    .blog-content figure {
+        margin: 16px 0;
+        text-align: center;
+    }
+    .blog-content figure img {
+        display: block;
+        margin: 0 auto;
+        max-width: 90%;
+    }
+    .blog-content figcaption {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 6px;
+    }
+
+    /* Mobile: stacked layout so floated images don't squeeze text */
+    @media (max-width: 768px) {
+        .blog-content img[style*="float:left"],
+        .blog-content img[style*="float:right"],
+        .blog-content figure img {
+            float: none !important;
+            display: block !important;
+            margin: 12px auto !important;
+            max-width: 100% !important;
+        }
+
+        /* Reduce drop-cap size on small screens for readability */
+        .reading-box p:first-of-type::first-letter {
+            font-size: 2.2rem;
+        }
+    }
+
+    /* Reactions styling (kept same look & feel) */
+    .reaction-btn {
         transition: transform 0.15s ease, box-shadow 0.2s ease;
         border-radius: 999px;
     }
@@ -209,9 +279,16 @@
           headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" }
         });
         const data = await res.json();
-        likeBtn.classList.toggle('active', data.liked === true);
-        likeBtn.setAttribute('aria-pressed', data.liked ? 'true' : 'false');
-        likeCount.textContent = String(data.count || 0);
+        // toggle active class based on response
+        if (res.ok) {
+          likeBtn.classList.toggle('active', data.liked === true);
+          likeBtn.setAttribute('aria-pressed', data.liked ? 'true' : 'false');
+          if (likeCount) likeCount.textContent = String(data.count || 0);
+        } else {
+          console.error('Like error', data);
+        }
+      } catch (e) {
+        console.error(e);
       } finally {
         likeBtn.disabled = false;
       }
@@ -227,9 +304,15 @@
           headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" }
         });
         const data = await res.json();
-        const active = data.bookmarked === true;
-        bookmarkBtn.classList.toggle('active', active);
-        bookmarkBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        if (res.ok) {
+          const active = data.bookmarked === true;
+          bookmarkBtn.classList.toggle('active', active);
+          bookmarkBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        } else {
+          console.error('Bookmark error', data);
+        }
+      } catch (e) {
+        console.error(e);
       } finally {
         bookmarkBtn.disabled = false;
       }
@@ -248,9 +331,10 @@
         try {
           await navigator.clipboard.writeText(window.location.href);
           const btn = document.getElementById('share-btn');
+          if (!btn) return;
           const original = btn.innerHTML;
           btn.innerHTML = "✅ Copied!";
-          setTimeout(() => btn.innerHTML = original, 1000);
+          setTimeout(() => btn.innerHTML = original, 1200);
         } catch (e) {
           alert("Link: " + window.location.href);
         }
