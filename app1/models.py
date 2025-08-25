@@ -2,11 +2,12 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
 from cloudinary.models import CloudinaryField
+from ckeditor.fields import RichTextField
 
 
 class Blogs(models.Model):  # keep plural name as in your code
     title = models.CharField(max_length=255)  # Slightly longer title limit
-    content = models.TextField()
+    content = RichTextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE)  # linked to User
     image = CloudinaryField('image', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

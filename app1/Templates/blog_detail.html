@@ -34,10 +34,11 @@
         {% endif %}
 
         <!-- Blog Content -->
-        <!-- added class `blog-content` to scope image rules to post body -->
+        <!-- Ensure saved HTML is rendered; place a clearfix after content -->
         <div class="p-4 rounded shadow-sm reading-box mb-4 blog-content"
              style="background: #ffffff; border: 1px solid #e9ecef; line-height: 1.8; font-size: 1.05rem; color: #333; text-align: justify;">
             {{ blog.content|safe }}
+            <div class="content-clear" aria-hidden="true" style="clear: both;"></div>
         </div>
 
         <!-- Action Buttons -->
@@ -139,124 +140,224 @@
 </div>
 
 <style>
-    /* Hover zoom for cover image */
-    .blog-img:hover {
-        transform: scale(1.05);
-    }
-
-    /* Smooth fade-in effect for the blog card */
-    .card {
-        animation: fadeInUp 0.6s ease-out;
-    }
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Drop cap for first letter in blog content */
+    /* small visual niceties you already had */
+    .blog-img:hover { transform: scale(1.05); }
+    .card { animation: fadeInUp 0.6s ease-out; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .reading-box p:first-of-type::first-letter {
-        font-size: 2.8rem;
-        font-weight: bold;
-        color: #007bff;
-        float: left;
-        line-height: 1;
-        padding-right: 8px;
-        padding-top: 4px;
+        font-size: 2.8rem; font-weight: bold; color: #007bff; float: left; line-height: 1;
+        padding-right: 8px; padding-top: 4px;
     }
 
-    /* ========= CKEditor / inline image alignment & responsive rules ========= */
+    /* ===================== IMAGE + FIGURE + ALIGNMENT RULES ===================== */
 
-    /* Base: keep images responsive and visually neat */
+    /* 1) base responsive behavior */
     .blog-content img {
         max-width: 100%;
         height: auto;
         border-radius: 8px;
         box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-        display: inline-block; /* let float/display styles apply from editor */
+        display: inline-block; /* allow float/display to control layout */
     }
 
-    /* Float left (editor may insert style="float:left") */
-    .blog-content img[style*="float:left"] {
+    /* 2) inline float styles (editor sometimes writes style="float:left") */
+    .blog-content img[style*="float:left"],
+    .blog-content img[style*="float: left"] {
         float: left;
         margin: 10px 20px 10px 0;
-        max-width: 45%; /* keep a reasonable width for float */
+        max-width: 45%;
     }
 
-    /* Float right (editor may insert style="float:right") */
-    .blog-content img[style*="float:right"] {
+    .blog-content img[style*="float:right"],
+    .blog-content img[style*="float: right"] {
         float: right;
         margin: 10px 0 10px 20px;
         max-width: 45%;
     }
 
-    /* Centered images (editor may use display:block; margin:auto) */
+    /* 3) centered inline images (editor may set display:block;margin:auto) */
     .blog-content img[style*="display:block"],
     .blog-content img[style*="margin-left:auto"],
-    .blog-content img[style*="margin-right:auto"]{
-        margin-left: auto;
-        margin-right: auto;
+    .blog-content img[style*="margin-right:auto"] {
         display: block;
+        margin: 12px auto;
         max-width: 90%;
     }
 
-    /* Allow images inserted as <figure> to be styled too */
-    .blog-content figure {
+    /* 4) common alignment classes (many editors set these) */
+    .blog-content img.alignleft,
+    .blog-content img.align-left,
+    .blog-content img.alignLeft {
+        float: left;
+        margin: 10px 20px 10px 0;
+        max-width: 45%;
+    }
+    .blog-content img.alignright,
+    .blog-content img.align-right,
+    .blog-content img.alignRight {
+        float: right;
+        margin: 10px 0 10px 20px;
+        max-width: 45%;
+    }
+    .blog-content img.aligncenter,
+    .blog-content img.align-center,
+    .blog-content img.alignCenter {
+        display: block;
+        margin: 12px auto;
+        max-width: 90%;
+    }
+
+    /* 5) figure wrappers (CKEditor 5 often outputs <figure class="image image-style-align-left">) */
+    .blog-content figure.image {
         margin: 16px 0;
         text-align: center;
     }
-    .blog-content figure img {
+    .blog-content figure.image img {
         display: block;
         margin: 0 auto;
         max-width: 90%;
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
     }
-    .blog-content figcaption {
+
+    .blog-content figure.image.image-style-align-left,
+    .blog-content figure.image.image-style-left,
+    .blog-content figure.image.align-left {
+        float: left;
+        margin: 10px 20px 10px 0;
+        max-width: 45%;
+    }
+    .blog-content figure.image.image-style-align-right,
+    .blog-content figure.image.image-style-right,
+    .blog-content figure.image.align-right {
+        float: right;
+        margin: 10px 0 10px 20px;
+        max-width: 45%;
+    }
+    .blog-content figure.image.image-style-align-center,
+    .blog-content figure.image.image-style-center,
+    .blog-content figure.image.align-center {
+        display: block;
+        margin: 12px auto;
+        max-width: 90%;
+        text-align: center;
+    }
+
+    .blog-content figure.image figcaption {
         font-size: 0.9rem;
         color: #6c757d;
         margin-top: 6px;
     }
 
-    /* Mobile: stacked layout so floated images don't squeeze text */
+    /* 6) clear floats below content so next blocks are unaffected */
+    .blog-content .content-clear { clear: both; height: 0; line-height: 0; font-size: 0; }
+
+    /* 7) mobile: stacked images (disable float to avoid squeezed text) */
     @media (max-width: 768px) {
-        .blog-content img[style*="float:left"],
-        .blog-content img[style*="float:right"],
-        .blog-content figure img {
+        .blog-content img,
+        .blog-content figure.image {
             float: none !important;
             display: block !important;
             margin: 12px auto !important;
             max-width: 100% !important;
         }
-
-        /* Reduce drop-cap size on small screens for readability */
-        .reading-box p:first-of-type::first-letter {
-            font-size: 2.2rem;
-        }
+        .reading-box p:first-of-type::first-letter { font-size: 2.2rem; }
     }
 
-    /* Reactions styling (kept same look & feel) */
-    .reaction-btn {
-        transition: transform 0.15s ease, box-shadow 0.2s ease;
-        border-radius: 999px;
-    }
+    /* reactions (unchanged) */
+    .reaction-btn { transition: transform 0.15s ease, box-shadow 0.2s ease; border-radius: 999px; }
     .reaction-btn:hover { transform: translateY(-1px); }
     .reaction-btn:active { transform: translateY(0); }
-    #like-btn.active {
-        background-color: #dc3545 !important;
-        color: #fff !important;
-        border-color: #dc3545 !important;
-        box-shadow: 0 .5rem 1rem rgba(220,53,69,.15);
-    }
-    #bookmark-btn.active {
-        background-color: #6c757d !important;
-        color: #fff !important;
-        border-color: #6c757d !important;
-        box-shadow: 0 .5rem 1rem rgba(108,117,125,.15);
-    }
+    #like-btn.active { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; box-shadow: 0 .5rem 1rem rgba(220,53,69,.15); }
+    #bookmark-btn.active { background-color: #6c757d !important; color: #fff !important; border-color: #6c757d !important; box-shadow: 0 .5rem 1rem rgba(108,117,125,.15); }
 </style>
 
-<!-- Minimal JS for interactions (persisted via Django) -->
+<!-- small DOM normalizer to enforce alignment classes/styles produced by editors -->
 <script>
   (function () {
-    // CSRF helper (Django cookie)
+    document.addEventListener('DOMContentLoaded', function () {
+      const content = document.querySelector('.blog-content');
+      if (!content) return;
+
+      // 1) Normalize <figure> alignment classes to inline styles so CSS selectors apply reliably
+      content.querySelectorAll('figure').forEach(fig => {
+        const cls = (fig.className || '').toLowerCase();
+        try {
+          if (cls.includes('align-left') || cls.includes('image-style-align-left') || cls.includes('image-style-left')) {
+            fig.style.cssFloat = 'left';
+            fig.style.margin = '10px 20px 10px 0';
+            fig.style.maxWidth = '45%';
+          } else if (cls.includes('align-right') || cls.includes('image-style-align-right') || cls.includes('image-style-right')) {
+            fig.style.cssFloat = 'right';
+            fig.style.margin = '10px 0 10px 20px';
+            fig.style.maxWidth = '45%';
+          } else if (cls.includes('align-center') || cls.includes('image-style-align-center') || cls.includes('image-style-center')) {
+            fig.style.display = 'block';
+            fig.style.margin = '12px auto';
+            fig.style.maxWidth = '90%';
+            fig.style.textAlign = 'center';
+          }
+        } catch (e) { /* ignore style errors */ }
+      });
+
+      // 2) Normalize <img> tags that have inline style strings (float / display / margin)
+      content.querySelectorAll('img').forEach(img => {
+        const styleAttr = img.getAttribute('style') || '';
+        const cls = (img.className || '').toLowerCase();
+
+        // If class based alignment present, apply inline style (helps some CSS resets)
+        if (cls.includes('alignleft') || cls.includes('align-left') || cls.includes('alignleft')) {
+          img.style.cssFloat = 'left';
+          img.style.margin = '10px 20px 10px 0';
+          img.style.maxWidth = '45%';
+        } else if (cls.includes('alignright') || cls.includes('align-right')) {
+          img.style.cssFloat = 'right';
+          img.style.margin = '10px 0 10px 20px';
+          img.style.maxWidth = '45%';
+        } else if (cls.includes('aligncenter') || cls.includes('align-center')) {
+          img.style.display = 'block';
+          img.style.margin = '12px auto';
+          img.style.maxWidth = '90%';
+        }
+
+        // If inline style contains float info, ensure CSS float is set (some browsers differ)
+        if (/float\s*:\s*left/.test(styleAttr)) {
+          img.style.cssFloat = 'left';
+          if (!img.style.margin) img.style.margin = '10px 20px 10px 0';
+          if (!img.style.maxWidth) img.style.maxWidth = '45%';
+        } else if (/float\s*:\s*right/.test(styleAttr)) {
+          img.style.cssFloat = 'right';
+          if (!img.style.margin) img.style.margin = '10px 0 10px 20px';
+          if (!img.style.maxWidth) img.style.maxWidth = '45%';
+        }
+
+        // If inline style suggests centering (display:block + margin:auto)
+        if (/display\s*:\s*block/.test(styleAttr) && /margin-left\s*:\s*auto/.test(styleAttr)) {
+          img.style.display = 'block';
+          img.style.marginLeft = 'auto';
+          img.style.marginRight = 'auto';
+          if (!img.style.maxWidth) img.style.maxWidth = '90%';
+        }
+
+        // Ensure images scale nicely on small screens (JS fallback)
+        img.style.maxWidth = img.style.maxWidth || '100%';
+        img.style.height = img.style.height || 'auto';
+      });
+
+      // 3) Append a final clear fix (ensures things below don't wrap around floats)
+      let clearElem = content.querySelector('.content-clear');
+      if (!clearElem) {
+        clearElem = document.createElement('div');
+        clearElem.style.clear = 'both';
+        content.appendChild(clearElem);
+      }
+    });
+  })();
+</script>
+
+<!-- Minimal JS for Like/Bookmark/Share (keeps your original behaviour) -->
+<script>
+  (function () {
     function getCookie(name) {
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
@@ -269,7 +370,6 @@
     const bookmarkBtn = document.getElementById('bookmark-btn');
     const isAuth = {{ request.user.is_authenticated|yesno:"true,false" }};
 
-    // Like -> POST to backend
     likeBtn?.addEventListener('click', async function () {
       if (!isAuth) { window.location.href = "{% url 'login' %}?next={{ request.path }}"; return; }
       likeBtn.disabled = true;
@@ -279,7 +379,6 @@
           headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" }
         });
         const data = await res.json();
-        // toggle active class based on response
         if (res.ok) {
           likeBtn.classList.toggle('active', data.liked === true);
           likeBtn.setAttribute('aria-pressed', data.liked ? 'true' : 'false');
@@ -294,7 +393,6 @@
       }
     });
 
-    // Bookmark -> POST to backend
     bookmarkBtn?.addEventListener('click', async function () {
       if (!isAuth) { window.location.href = "{% url 'login' %}?next={{ request.path }}"; return; }
       bookmarkBtn.disabled = true;
@@ -318,7 +416,6 @@
       }
     });
 
-    // Share
     window.shareBlog = async function () {
       const shareData = {
         title: "{{ blog.title|escapejs }}",
