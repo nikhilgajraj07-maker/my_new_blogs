@@ -4,314 +4,497 @@
 {% block title %}Blog page{% endblock %}
 
 {% block pagecontent %}
+<!-- ===== PAGE STYLES (boss-level, self-contained) ===== -->
 <style>
-    .blog-card {
-        border: none;
-        border-radius: 15px;
-        overflow: hidden;
-        background: rgba(255, 255, 255, .85);
-        backdrop-filter: blur(8px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, .1);
-        transition: transform .4s, box-shadow .4s;
-        display: flex;
-        flex-direction: column;
-        height: 100%
-    }
-    .blog-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 10px 30px rgba(0, 123, 255, .3) }
-    .blog-card img { border-top-left-radius: 15px; border-top-right-radius: 15px; transition: transform .4s; object-fit: cover; width: 100% }
-    .blog-card:hover img { transform: scale(1.05) }
-    .blog-card .card-title { font-size: 1.2rem; font-weight: 700; color: #007bff; transition: color .3s }
-    .blog-card:hover .card-title { color: #0056b3 }
-    .blog-card small.text-muted { font-style: italic; font-size: .85rem; color: #6c757d; position: relative; padding-left: 1.2rem }
-    .blog-card small.text-muted::before { content: '\f007'; font-family: 'Font Awesome 5 Free'; font-weight: 900; position: absolute; left: 0; color: #007bff; font-size: .9rem }
+  :root{
+    --card-radius: 18px;
+    --glass: var(--glass-bg, rgba(255,255,255,0.06));
+    --glass-border: var(--glass-border, rgba(255,255,255,0.08));
+    --accent-a: var(--accent-a, #6366f1);
+    --accent-b: var(--accent-b, #ec4899);
+    --muted: rgba(255,255,255,0.66);
+  }
 
-    .author-badge { background: linear-gradient(135deg, #6a11cb, #2575fc); color: #fff; font-size: .8rem; font-weight: 700; padding: 4px 10px; border-radius: 50px; box-shadow: 0 2px 6px rgba(0, 0, 0, .3) }
+  .container-small { max-width:1100px; margin:0 auto; }
 
-    .form-container { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, .08); height: 100%; display: flex; flex-direction: column }
-    .form-container h2 { font-size: 1.4rem; font-weight: 600; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 5px }
-    .form-container form { flex-grow: 1; display: flex; flex-direction: column }
+  /* layout */
+  .page-row { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+  .col-left { flex:1 1 520px; min-width:280px; }
+  .col-right { width:420px; max-width:100%; }
 
-    input[name='author'], input[name='title'], textarea { border-radius: 8px !important; border: 1px solid #ccc !important; padding: 8px 12px !important }
+  /* HEADINGS */
+  .page-heading { font-size:1.6rem; font-weight:800; margin-bottom:12px; }
+  .sub-muted { color:var(--muted); font-size:.95rem; }
 
-    /* CKEditor skin + SCROLLER */
-    .ck.ck-editor { border: 1px solid #ddd; border-radius: 12px; display: flex; flex-direction: column; height: 100% }
-    .ck.ck-toolbar { border-top-left-radius: 12px; border-top-right-radius: 12px; position: sticky; top: 0; z-index: 50; background: #fff; border-bottom: 1px solid #ddd; box-shadow: 0 2px 6px rgba(0,0,0,.08) }
-    .ck.ck-editor__main>.ck-editor__editable { min-height: 340px; max-height: 420px; overflow-y: auto; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+  /* ===== BLOG CARD (boss) ===== */
+  .blog-card {
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px) saturate(120%);
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    display:flex;
+    flex-direction:column;
+    transition: transform .32s cubic-bezier(.2,.9,.25,1), box-shadow .32s, border-color .32s;
+  }
+  .blog-card:hover{
+    transform: translateY(-12px);
+    box-shadow: 0 28px 80px rgba(2,6,23,0.45);
+    border-color: color-mix(in oklab, var(--accent-a) 30%, transparent);
+  }
 
-    /* Dark mode */
-    #editor-card.editor-dark .ck.ck-editor { background: #1b1b1b; border-color: #2a2a2a }
-    #editor-card.editor-dark .ck.ck-toolbar { background: #222; border-color: #2a2a2a }
-    #editor-card.editor-dark .ck.ck-toolbar .ck-button .ck-button__label { color: #e6e6e6 }
-    #editor-card.editor-dark .ck.ck-toolbar .ck-button .ck-icon { filter: brightness(1.2) }
-    #editor-card.editor-dark .ck-content { background: #121212; color: #e6e6e6 }
-    #editor-card.editor-dark .ck.ck-editor__main { border-color: #2a2a2a }
+  .blog-media { width:100%; height:220px; object-fit:cover; display:block; }
+  .blog-body { padding:16px 16px 18px; display:flex; flex-direction:column; gap:10px; flex:1; }
+  .blog-title { font-size:1.12rem; font-weight:800; margin:0; color:var(--text); line-height:1.12; }
+  .blog-excerpt { color:var(--muted); font-size:.95rem; margin:0; flex:1; }
 
-    /* Emoji panel */
-    .emoji-wrap { position: relative }
-    .emoji-panel { display: none; position: absolute; z-index: 20; top: 38px; right: 0; background: #fff; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, .12); padding: 8px; max-width: 300px; max-height: 220px; overflow: auto }
-    .emoji-panel button { border: none; background: transparent; font-size: 20px; line-height: 1.2; padding: 6px; border-radius: 8px }
-    .emoji-panel button:hover { background: #f1f3f5; cursor: pointer }
+  .blog-meta { display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:8px; }
+  .author-badge {
+    display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px;
+    background: linear-gradient(135deg,var(--accent-a),var(--accent-b)); color:white; font-weight:700; font-size:.85rem;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.18);
+  }
+  .author-avatar { width:28px; height:28px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.12); }
 
-    @media (max-width:768px) {
-        .blog-card img { height: 160px !important }
-        .form-container { padding: 15px; margin-top: 10px }
-        .card-title { font-size: 1rem !important }
-        .card-text { font-size: .85rem !important }
-    }
+  .btn-read {
+    background: linear-gradient(90deg,var(--accent-a),var(--accent-b));
+    color: #fff;
+    border-radius:10px;
+    padding:8px 12px;
+    border: none;
+    font-weight:700;
+    cursor:pointer;
+    transition: transform .18s, box-shadow .18s;
+    text-decoration:none;
+    display:inline-block;
+  }
+  .btn-read:hover { transform: translateY(-4px); box-shadow:0 14px 40px rgba(0,0,0,.28); }
+
+  /* ===== FORM (editor) ===== */
+  .editor-panel {
+    border-radius: var(--card-radius);
+    background: var(--glass);
+    border:1px solid var(--glass-border);
+    padding:18px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 12px 36px rgba(0,0,0,.18);
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .editor-panel h3 { margin:0; font-size:1.25rem; font-weight:800; }
+  .field { display:block; width:100%; }
+  .input, input[type=file] { width:100%; border-radius:10px; padding:10px 12px; border:1px solid rgba(0,0,0,0.06); background:transparent; color:var(--text); }
+  .small-muted { color:var(--muted); font-size:.9rem; }
+
+  /* toolbar row */
+  .toolbar-row { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .toolbar-left { display:flex; gap:8px; align-items:center; }
+
+  /* emoji panel */
+  .emoji-panel {
+    position:absolute; right:0; top:calc(100% + 8px); width:320px; max-width:90vw;
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:12px; padding:10px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.2); display:none; z-index:50;
+  }
+  .emoji-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:6px; }
+
+  /* dark editor state */
+  #editor-card.editor-dark { background:#111 !important; border-color:#2a2a2a !important; }
+  #editor-card.editor-dark .ck-content { background:#0e0e10; color:#eaeaea; }
+
+  /* responsive */
+  @media (max-width:1000px) {
+    .page-row { gap:18px; }
+    .col-right { width:100%; order:2; }
+    .col-left { order:1; }
+  }
+  @media (max-width:640px) {
+    .blog-media { height:160px; }
+  }
 </style>
 
-<div class="container mt-2">
-    <div class="row g-4 flex-column flex-lg-row">
-        <!-- Saved Blogs -->
-        <div class="col-lg-6 col-12">
-            <h2 class="mb-3">Saved Blogs</h2>
-            <div class="row" id="blog-list">
-                {% for blog in blogs|slice:':2' %}
-                <div class="col-12 mb-3 blog-item">
-                    <div class="card blog-card position-relative">
-                        <a href="{% url 'blog_detail' blog.id %}">
-                            {% if blog.image %}
-                            <img src="{{ blog.image.url }}" class="card-img-top" alt="{{ blog.title }}" style="height:200px" />
-                            {% else %}
-                            <img src="{% static 'images/default_blog.jpg' %}" class="card-img-top" alt="Default blog image" style="height:200px" />
-                            {% endif %}
-                        </a>
-                        <div class="card-body d-flex flex-column justify-content-between">
-                            <div>
-                                <h5 class="card-title">
-                                    <a href="{% url 'blog_detail' blog.id %}" class="text-decoration-none text-primary">
-                                        {{ blog.title|truncatechars:50 }}
-                                    </a>
-                                </h5>
-                                <p class="card-text text-muted small">{{ blog.content|striptags|truncatewords:20 }}</p>
-                            </div>
-                            {% if request.user == blog.author or request.user.is_staff %}
-                            <div class="d-flex justify-content-between align-items-center mt-auto">
-                                <a href="{% url 'blog_edit' blog.id %}" class="btn btn-outline-warning btn-sm">✏ Edit</a>
-                                <form action="{% url 'blog_delete' blog.id %}" method="post" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to delete this blog?');">🗑 Delete</button>
-                                </form>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-center text-muted">No blogs yet.</div>
-                {% endfor %}
-            </div>
+<div class="container-small">
+  <div class="page-row">
 
-            {% if blogs|length > 2 %}
-            <div class="text-center mt-3">
-                <a href="{% url 'all_blogs' %}" class="btn btn-outline-primary btn-sm">See More</a>
-            </div>
+    <!-- LEFT: SAVED BLOGS -->
+    <div class="col-left" data-aos="fade-up">
+      <div class="d-flex align-items-start justify-content-between mb-2">
+        <div>
+          <div class="page-heading">Saved Blogs</div>
+          <div class="sub-muted">Recent drafts and posts you saved — quick access.</div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        {% for blog in blogs|slice:':6' %}
+        <div class="col-12" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1 }}0">
+          <article class="blog-card" tabindex="0" aria-labelledby="title-{{ blog.id }}">
+            {% if blog.image %}
+              <img src="{{ blog.image.url }}" alt="{{ blog.title|escape }}" class="blog-media" loading="lazy">
+            {% else %}
+              <img src="{% static 'images/default_blog.jpg' %}" alt="No image" class="blog-media" loading="lazy">
             {% endif %}
-        </div>
 
-        <!-- Blog Entry Form -->
-        <div class="col-lg-6 col-12">
-            <div class="form-container" id="editor-card">
-                <h2>Write a New Blog</h2>
+            <div class="blog-body">
+              <h3 id="title-{{ blog.id }}" class="blog-title">{{ blog.title|truncatechars:80 }}</h3>
+              <p class="blog-excerpt">{{ blog.content|striptags|truncatewords:28 }}</p>
 
-                <form method="POST" enctype="multipart/form-data" id="blog-entry-form">
-                    {% csrf_token %}
+              <div class="blog-meta">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span class="author-badge" aria-hidden="true">
+                    {% if blog.author.profile and blog.author.profile.image %}
+                      <img src="{{ blog.author.profile.image.url }}" alt="{{ blog.author.username }}" class="author-avatar">
+                    {% else %}
+                      <span style="display:inline-grid;width:28px;height:28px;border-radius:50%;place-items:center;background:rgba(255,255,255,0.06);color:var(--text);font-weight:700;font-size:.85rem;">
+                        {{ blog.author.get_full_name|default:blog.author.username|slice:":1"|upper }}
+                      </span>
+                    {% endif %}
+                    <span>{{ blog.author.get_full_name|default:blog.author.username }}</span>
+                  </span>
+                </div>
 
-                    <div class="mb-3">
-                        {{ form.title.label_tag }} {{ form.title }}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form.image.label_tag }} {{ form.image }}
-                    </div>
-
-                    <!-- Hidden Django field to submit HTML -->
-                    <textarea name="content" id="id_content" style="display:none;">{{ form.content.value|default_if_none:'' }}</textarea>
-
-                    <div class="d-flex justify-content-between align-items-center mb-2 emoji-wrap">
-                        <div>
-                            <button type="button" id="toggle-dark" class="btn btn-sm btn-outline-secondary">🌙 Dark</button>
-                            <button type="button" id="emoji-btn" class="btn btn-sm btn-outline-primary ms-2">😀 Emojis</button>
-                        </div>
-                        <small id="autosave-indicator" class="text-muted">Draft: —</small>
-                        <div id="emoji-panel" class="emoji-panel" aria-hidden="true"></div>
-                    </div>
-
-                    <!-- CKEditor mount -->
-                    <div id="editor">{{ form.content.value|default_if_none:''|safe }}</div>
-
-                    <div id="word-count" class="text-muted small mt-2"></div>
-
-                    <button type="submit" class="btn btn-primary w-100 mt-3">Publish Blog</button>
-                </form>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <a href="{% url 'blog_detail' blog.id %}" class="btn-read" aria-label="Read {{ blog.title|escape }}">Read</a>
+                  <span class="small-muted" style="margin-left:8px;">{{ blog.created_at|date:"M j, Y" }}</span>
+                </div>
+              </div>
             </div>
+          </article>
         </div>
+        {% empty %}
+        <div class="col-12">
+          <div class="blog-card" style="padding:20px;">
+            <p class="small-muted">No blogs yet. Create your first post on the right.</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if blogs|length > 6 %}
+      <div class="mt-3 text-center">
+        <a href="{% url 'all_blogs' %}" class="btn" style="background:linear-gradient(90deg,var(--accent-a),var(--accent-b));color:#fff;border-radius:12px;padding:10px 18px;">See All Blogs</a>
+      </div>
+      {% endif %}
     </div>
+
+    <!-- RIGHT: EDITOR / FORM -->
+    <div class="col-right" data-aos="fade-left">
+      <div id="editor-card" class="editor-panel" aria-live="polite">
+        <div class="d-flex align-items-start justify-content-between">
+          <h3>Write a New Blog</h3>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" id="blog-form" novalidate>
+          {% csrf_token %}
+          <!-- Title -->
+          <div class="mb-2">
+            <label for="id_title" class="small-muted">Title</label>
+            {{ form.title }}
+          </div>
+
+          <!-- Image -->
+          <div class="mb-2">
+            <label for="id_image" class="small-muted">Cover image</label>
+            {{ form.image }}
+            <div class="small-muted mt-1">Recommended size: 1200×700</div>
+          </div>
+
+          <!-- Hidden content field (server expects 'content') -->
+          <textarea name="content" id="id_content" style="display:none;">{{ form.content.value|default_if_none:'' }}</textarea>
+
+          <!-- toolbar / emoji / autosave -->
+          <div class="toolbar-row" style="position:relative;">
+            <div class="toolbar-left">
+              <button type="button" id="toggle-dark" class="btn btn-sm btn-outline-secondary" aria-pressed="false">🌙 Dark</button>
+              <button type="button" id="emoji-toggle" class="btn btn-sm btn-outline-primary">😀 Emoji</button>
+            </div>
+
+            <div class="small-muted">Autosave: <span id="autosave-time">—</span></div>
+
+            <div id="emoji-panel" class="emoji-panel" aria-hidden="true">
+              <input type="search" id="emoji-search" placeholder="Search emoji..." class="input" style="margin-bottom:8px;">
+              <div class="emoji-grid" id="emoji-grid" aria-hidden="false">
+                <!-- JS will populate emojis -->
+              </div>
+            </div>
+          </div>
+
+          <!-- editor container -->
+          <div id="editor" aria-label="Blog editor" style="min-height:180px;margin-top:8px;">
+            {{ form.content.value|default_if_none:''|safe }}
+          </div>
+
+          <div class="d-flex align-items-center justify-content-between mt-2">
+            <div class="small-muted" id="word-count">Words: 0</div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn btn-sm" style="background:linear-gradient(90deg,var(--accent-a),var(--accent-b));color:#fff;border-radius:10px;padding:8px 12px;">Publish</button>
+              <button type="button" id="save-draft" class="btn btn-sm btn-outline-secondary">Save Draft</button>
+            </div>
+          </div>
+        </form>
+
+        <!-- optional small help -->
+        <div class="small-muted mt-2">Tip: Press <kbd>Ctrl/Cmd + Enter</kbd> to publish quickly.</div>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- ===== PAGE SCRIPTS: CKEditor init, autosave, emoji, UI interactions ===== -->
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const hiddenField = document.getElementById('id_content');
-        const autosaveEl = document.getElementById('autosave-indicator');
-        const mountEl = document.getElementById('editor');
-        const editorCard = document.getElementById('editor-card');
-        const darkBtn = document.getElementById('toggle-dark');
-        const wordCountEl = document.getElementById('word-count');
-        const emojiBtn = document.getElementById('emoji-btn');
-        const emojiPanel = document.getElementById('emoji-panel');
+(function(){
+  // --- helpers ---
+  const qs = (sel, ctx=document) => ctx.querySelector(sel);
+  const qsa = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
+  const stripHtml = (html) => (new DOMParser()).parseFromString(html,'text/html').body.textContent || '';
+  const userId = {{ request.user.id|default:0 }};
+  const DRAFT_KEY = 'blog_draft_' + userId;
 
-        if (!(window.CKEDITOR && CKEDITOR.ClassicEditor)) {
-            console.error('CKEditor 5 super-build not loaded (check base.html include).');
-            return;
+  // --- AOS refresh (base likely initialized it) ---
+  try{ if(window.AOS) AOS.refresh(); }catch(e){}
+
+  // --- CKEditor init ---
+  let editorInstance = null;
+  ClassicEditor
+    .create( document.querySelector('#editor'), {
+      toolbar: {
+        items: [
+          'undo','redo','heading','|','bold','italic','link','bulletedList','numberedList',
+          '|','insertTable','blockQuote','codeBlock','|','outdent','indent'
+        ]
+      },
+      table: { contentToolbar: [ 'tableColumn','tableRow','mergeTableCells' ] },
+      removePlugins: ['MediaEmbed','CKBox','EasyImage'],
+      placeholder: 'Write your amazing post here...'
+    })
+    .then(editor => {
+      editorInstance = editor;
+      // load draft if exists
+      try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if(raw){
+          const obj = JSON.parse(raw);
+          if(obj && obj.content && (!document.getElementById('id_content').value || obj.lastSaved > 0)) {
+            editor.setData(obj.content);
+          }
+          // populate title if empty
+          if(obj.title){
+            const t = document.querySelector('#id_title');
+            if(t && !t.value) t.value = obj.title;
+          }
+          updateAutosaveIndicator(obj.lastSaved || null);
         }
+      } catch(e){ console.warn('draft load failed',e); }
 
-        // Dark theme boot
-        const THEME_KEY = 'blog_editor_theme';
-        const savedTheme = localStorage.getItem(THEME_KEY);
-        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            editorCard.classList.add('editor-dark');
+      // update word count on change
+      editor.model.document.on('change:data', () => {
+        updateWordCount();
+      });
+
+      // keyboard shortcut: Ctrl/Cmd+Enter to submit
+      editor.editing.view.document.on('keydown', (evt, data) => {
+        if((data.ctrlKey || data.metaKey) && data.keyCode === 13) {
+          // submit form
+          evt.stop();
+          submitForm();
         }
-        updateDarkButton();
+      });
 
-        // Django CSRF from cookie (recommended)
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
-        const CSRF = getCookie('csrftoken');
+      updateWordCount();
+    })
+    .catch(err => console.error(err));
 
-        CKEDITOR.ClassicEditor.create(mountEl, {
-            placeholder: '✍️ Start writing your blog...',
-            toolbar: {
-                items: [
-                    'heading', '|',
-                    'bold', 'italic', 'underline', 'strikethrough', 'link', 'highlight', 'removeFormat', '|',
-                    'fontFamily', 'fontSize', 'fontColor', 'fontBackgroundColor', 'alignment', '|',
-                    'bulletedList', 'numberedList', 'outdent', 'indent', '|',
-                    'blockQuote', 'insertTable', 'mediaEmbed', 'horizontalLine', '|',
-                    'uploadImage', 'imageInsert', '|',   // image buttons
-                    'specialCharacters', 'findAndReplace', '|',
-                    'code', 'codeBlock', 'sourceEditing', '|',
-                    'undo', 'redo'
-                ],
-                shouldNotGroupWhenFull: true
-            },
-            image: {
-                toolbar: [
-                    'imageTextAlternative', 'toggleImageCaption',
-                    'imageStyle:inline', 'imageStyle:block', 'imageStyle:side'
-                ],
-                insert: { type: 'auto' }
-            },
-            // Simple Upload adapter -> Django endpoint
-            simpleUpload: {
-                uploadUrl: "{% url 'upload_image' %}",   // matches the URL added below
-                headers: {
-                    'X-CSRFToken': CSRF,
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            },
-            table: {
-                contentToolbar: [
-                    'tableColumn', 'tableRow', 'mergeTableCells',
-                    'tableCellProperties', 'tableProperties'
-                ]
-            },
-            // Remove paid/collab/AI plugins to avoid license errors
-            removePlugins: [
-                'CKBox', 'CKFinder', 'EasyImage',
-                'ExportPdf', 'ExportWord',
-                'WProofreader', 'MathType',
-                'SlashCommand', 'Template', 'DocumentOutline', 'FormatPainter', 'TableOfContents',
-                'Pagination', 'MultiLevelList', 'CaseChange', 'CaseChangeEditing',
-                'PresenceList', 'Comments', 'TrackChanges', 'TrackChangesData', 'RevisionHistory',
-                'RealTimeCollaborativeComments', 'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory',
-                'AiAssistant', 'AIAssistant', 'CKEditorAI',
-                'PasteFromOfficeEnhanced', 'Mermaid'
-            ],
-            // Word count display
-            wordCount: {
-                onUpdate: stats => {
-                    if (wordCountEl) {
-                        wordCountEl.textContent = `Words: ${stats.words} · Characters: ${stats.characters}`;
-                    }
-                }
-            }
-        })
-        .then((editor) => {
-            // preload hidden field if editing
-            if (hiddenField && hiddenField.value) editor.setData(hiddenField.value);
+  // --- bind form submit: copy editor data to hidden textarea ---
+  const form = document.getElementById('blog-form');
+  function submitForm(){
+    if(!editorInstance){
+      // fallback: ensure textarea has whatever current content
+      // (editor might not be ready)
+    }
+    const txt = document.getElementById('id_content');
+    if(editorInstance) txt.value = editorInstance.getData();
+    // remove draft on submit
+    try { localStorage.removeItem(DRAFT_KEY); } catch(e){}
+    form.submit();
+  }
+  form.addEventListener('submit', function(e){
+    // before submit, sync data
+    if(editorInstance) document.getElementById('id_content').value = editorInstance.getData();
+    // allow normal submit to proceed
+  });
 
-            // simple local draft
-            const blogId = "{{ form.instance.id|default:'' }}";
-            const draftKey = blogId ? ('blog_draft_' + blogId) : 'blog_draft_new';
+  // Expose submit for shortcut
+  window.submitBlogForm = submitForm;
 
-            if ((!hiddenField || !hiddenField.value) && localStorage.getItem(draftKey)) {
-                editor.setData(localStorage.getItem(draftKey));
-                if (autosaveEl) autosaveEl.textContent = 'Draft: restored';
-            } else {
-                if (autosaveEl) autosaveEl.textContent = 'Draft: —';
-            }
+  // --- autosave (title + content) ---
+  const saveDraftBtn = document.getElementById('save-draft');
+  const autosaveIndicator = document.getElementById('autosave-time');
+  function saveDraft(reason){
+    try{
+      const titleEl = document.querySelector('#id_title');
+      const title = titleEl ? titleEl.value : '';
+      const content = editorInstance ? editorInstance.getData() : document.getElementById('id_content').value || '';
+      const payload = { title, content, lastSaved: Date.now(), reason: reason || 'auto' };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+      updateAutosaveIndicator(payload.lastSaved);
+    }catch(e){ console.warn('autosave failed', e); }
+  }
+  function updateAutosaveIndicator(ts){
+    if(!ts){ autosaveIndicator.textContent = '—'; return; }
+    const d = new Date(ts);
+    autosaveIndicator.textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  }
+  // manual save
+  if(saveDraftBtn) saveDraftBtn.addEventListener('click', ()=> saveDraft('manual'));
 
-            let t;
-            editor.model.document.on('change:data', () => {
-                if (hiddenField) hiddenField.value = editor.getData();
-                clearTimeout(t);
-                t = setTimeout(() => {
-                    try {
-                        localStorage.setItem(draftKey, editor.getData());
-                        if (autosaveEl) autosaveEl.textContent = 'Draft: saved locally ✔';
-                    } catch (e) {}
-                }, 400);
-            });
+  // periodic autosave every 6s
+  setInterval(()=> {
+    try{
+      if(editorInstance){
+        const content = stripHtml(editorInstance.getData()).trim();
+        // only save if non-empty (reduce waste)
+        if(content.length > 0) saveDraft('interval');
+      }
+    }catch(e){}
+  }, 6000);
 
-            // submit -> ensure hidden value + clear draft
-            const form = document.getElementById('blog-entry-form');
-            if (form) {
-                form.addEventListener('submit', () => {
-                    if (hiddenField) hiddenField.value = editor.getData();
-                    localStorage.removeItem(draftKey);
-                });
-            }
+  // --- word count UI ---
+  function updateWordCount(){
+    try{
+      const wcEl = document.getElementById('word-count');
+      const text = editorInstance ? stripHtml(editorInstance.getData()) : stripHtml(document.getElementById('id_content').value || '');
+      const words = text.trim().length ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+      wcEl.textContent = 'Words: ' + words;
+    }catch(e){}
+  }
 
-            // Free emoji panel
-            const EMOJIS = "😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😇 😍 🤩 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤗 🤔 🤨 😐 😑 😶 🙄 😏 😣 😥 😮 🤐 😯 😪 😫 🥱 😴 😌 🤤 😒 😓 😔 😕 🥲 😬 🤥 😶‍🌫️ 🥹 🥰 😻 👍 👎 👏 🙌 🤝 💪 ✍️ ✅ ❌ ✨ ❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 💯 🔥 🎉 🥳 ⭐".split(' ');
-            emojiPanel.innerHTML = EMOJIS.map(e => `<button type="button" aria-label="${e}">${e}</button>`).join('');
-            emojiBtn.addEventListener('click', () => {
-                const showing = emojiPanel.style.display === 'block';
-                emojiPanel.style.display = showing ? 'none' : 'block';
-                emojiPanel.setAttribute('aria-hidden', showing ? 'true' : 'false');
-            });
-            emojiPanel.addEventListener('click', (ev) => {
-                const btn = ev.target.closest('button');
-                if (!btn) return;
-                const ch = btn.textContent;
-                editor.model.change(writer => {
-                    editor.model.insertContent(writer.createText(ch), editor.model.document.selection);
-                });
-            });
-            document.addEventListener('click', (e) => {
-                if (!emojiPanel.contains(e.target) && !emojiBtn.contains(e.target)) {
-                    emojiPanel.style.display = 'none';
-                    emojiPanel.setAttribute('aria-hidden', 'true');
-                }
-            });
-        })
-        .catch((err) => console.error(err));
+  // --- dark toggle for editor panel ---
+  const toggleDark = document.getElementById('toggle-dark');
+  const editorCard = document.getElementById('editor-card');
+  try{
+    const savedDark = localStorage.getItem('editor_dark') === '1';
+    if(savedDark) editorCard.classList.add('editor-dark');
+    toggleDark.setAttribute('aria-pressed', savedDark ? 'true' : 'false');
+  }catch(e){}
+  toggleDark.addEventListener('click', function(){
+    const isDark = editorCard.classList.toggle('editor-dark');
+    localStorage.setItem('editor_dark', isDark ? '1' : '0');
+    toggleDark.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+  });
 
-        // Dark toggle
-        darkBtn.addEventListener('click', () => {
-            editorCard.classList.toggle('editor-dark');
-            localStorage.setItem('blog_editor_theme', editorCard.classList.contains('editor-dark') ? 'dark' : 'light');
-            updateDarkButton();
-        });
-        function updateDarkButton() {
-            const dark = editorCard.classList.contains('editor-dark');
-            darkBtn.textContent = dark ? '☀️ Light' : '🌙 Dark';
-            darkBtn.classList.toggle('btn-outline-secondary', !dark);
-            darkBtn.classList.toggle('btn-outline-light', dark);
-        }
+  // --- Emoji panel (basic searchable grid) ---
+  const emojiBtn = document.getElementById('emoji-toggle');
+  const emojiPanel = document.getElementById('emoji-panel');
+  const emojiGrid = document.getElementById('emoji-grid');
+  const emojiSearch = document.getElementById('emoji-search');
+
+  const EMOJIS = ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','😉','😍','😘','🤩','😎','😏','🤔','🤨','🙃','😴','😬','🤯','😱','👏','🙌','👍','👎','🔥','✨','🎉','💡','❤️','🧡','💛','💚','💙','💜','🖤','☕','🍕','🍔','🥗','📌','📖','💬','🔗','✅','❌','⚠️','💼','📝'];
+
+  function renderEmojiGrid(filter=''){
+    emojiGrid.innerHTML = '';
+    const f = (filter||'').trim().toLowerCase();
+    EMOJIS.filter(e => {
+      if(!f) return true;
+      // simple name matching not available, so match against codepoint string
+      return e.includes(f);
+    }).forEach(e => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'emoji-btn';
+      btn.textContent = e;
+      btn.title = e;
+      btn.addEventListener('click', () => {
+        insertEmojiAtCursor(e);
+        emojiPanel.style.display = 'none';
+        emojiBtn.focus();
+      });
+      emojiGrid.appendChild(btn);
     });
+  }
+  renderEmojiGrid();
+
+  emojiBtn.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    emojiPanel.style.display = (emojiPanel.style.display === 'block') ? 'none' : 'block';
+    emojiPanel.setAttribute('aria-hidden', emojiPanel.style.display !== 'block' ? 'true' : 'false');
+    if(emojiPanel.style.display === 'block') emojiSearch.focus();
+  });
+
+  emojiSearch.addEventListener('input', () => renderEmojiGrid(emojiSearch.value));
+
+  // insert emoji into CKEditor at cursor
+  function insertEmojiAtCursor(emoji){
+    if(!editorInstance) return;
+    editorInstance.model.change( writer => {
+      const viewFragment = editorInstance.data.processor.toView( emoji );
+      const modelFragment = editorInstance.data.toModel( viewFragment );
+      editorInstance.model.insertContent( modelFragment, editorInstance.model.document.selection );
+    } );
+    // update word count
+    updateWordCount();
+  }
+
+  // close emoji on outside click
+  document.addEventListener('click', (e) => {
+    if(!emojiPanel.contains(e.target) && !emojiBtn.contains(e.target)) {
+      emojiPanel.style.display = 'none';
+      emojiPanel.setAttribute('aria-hidden','true');
+    }
+  });
+
+  // --- small UX: Enter on card opens read link ---
+  qsa('.blog-card').forEach(card => {
+    card.addEventListener('keydown', (ev) => {
+      if(ev.key === 'Enter') {
+        const link = card.querySelector('a.btn-read, a');
+        if(link) link.click();
+      }
+    });
+  });
+
+  // --- simple tilt on hover for cards (lightweight) ---
+  qsa('.blog-card').forEach(card => {
+    let raf = null;
+    card.addEventListener('mousemove', (e) => {
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      const rx = (py - .5) * -4;
+      const ry = (px - .5) * 6;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-8px)`);
+    });
+    card.addEventListener('mouseleave', () => { cancelAnimationFrame(raf); card.style.transform = ''; });
+  });
+
+  // --- bootstrap carousel accessibility (if present elsewhere) ---
+  try {
+    if(window.bootstrap && window.bootstrap.Carousel){
+      qsa('.carousel').forEach(c => {
+        const inst = bootstrap.Carousel.getOrCreateInstance(c, { interval: 5000, ride: 'carousel', pause:'hover' });
+        c.addEventListener('focusin', () => inst.pause());
+        c.addEventListener('focusout', () => inst.cycle());
+      });
+    }
+  } catch(e){}
+
+  // expose some functions for debugging in console (optional)
+  window.blogEditor = {
+    saveDraft: () => saveDraft('manual'),
+    insertEmoji: insertEmojiAtCursor,
+    submit: submitForm
+  };
+
+  // helper submit wrapper
+  function submitForm(){
+    if(editorInstance) document.getElementById('id_content').value = editorInstance.getData();
+    try { localStorage.removeItem(DRAFT_KEY); } catch(e){}
+    form.submit();
+  }
+
+})();
 </script>
 {% endblock %}

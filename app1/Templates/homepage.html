@@ -1,356 +1,335 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Home — My Blogs{% endblock %}
 
 {% block pagecontent %}
-<!-- Font Awesome for icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
+<!-- PAGE-SPECIFIC STYLES (compact) -->
 <style>
-/* ===== Modern Animated Background (Optimized) ===== */
-body {
-  position: relative;
-  overflow-x: hidden;
-}
+  /* HERO */
+  .hero-wrap { padding:3.25rem 0; }
+  .hero-inner { display:flex; gap:2rem; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .hero-left { flex:1 1 560px; min-width:260px; }
+  .hero-title { font-weight:800; font-size:2.4rem; line-height:1.02; margin:0 0 .5rem; }
+  .hero-sub { color:var(--muted, rgba(255,255,255,0.65)); margin-bottom:1.25rem; font-size:1.05rem; }
 
-/* Aurora gradient waves */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: radial-gradient(circle at 20% 30%, rgba(0,123,255,0.4), transparent 70%),
-              radial-gradient(circle at 80% 70%, rgba(0,198,255,0.35), transparent 60%),
-              radial-gradient(circle at 50% 100%, rgba(0,86,179,0.4), transparent 70%);
-  animation: aurora 21s ease-in-out infinite alternate;
-  z-index: -2;
-  will-change: transform, filter;
-}
-
-/* Floating glowing particles */
-body::after {
-  content: "";
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background-image: radial-gradient(rgba(255,255,255,0.3) 1.5px, transparent 1.5px);
-  background-size: 100px 100px;
-  animation: floatDots 120s linear infinite;
-  z-index: -1;
-  opacity: 0.4;
-  will-change: background-position;
-}
-
-/* Keyframes */
-@keyframes aurora {
-  0% { transform: translateY(0) scale(1); filter: blur(20px); }
-  50% { transform: translateY(-10px) scale(1.03); filter: blur(25px); }
-  100% { transform: translateY(0) scale(1); filter: blur(20px); }
-}
-@keyframes floatDots {
-  from { background-position: 0 0; }
-  to { background-position: 300px 600px; }
-}
-
-/* ===== Existing Styles (unchanged) ===== */
-.hero h2 {
-  font-size: 2.5rem;
-  background-color: rgba(0,0,0,0.5);
-  padding: 1rem;
-  border-radius: 5px;
-}
-.post-preview { margin-bottom: 1.5rem; }
-footer {
-  background-color: #2c3e50;
-  color: white;
-  text-align: center;
-  padding: 1rem;
-  margin-top: 2rem;
-}
-@media (max-width: 600px) {
-  .hero h2 { font-size: 1.8rem; }
-}
-
-/* ===== Responsive Carousel ===== */
-#carouselExampleCaptions { --bs-carousel-transition: transform 0.6s ease; }
-
-.carousel-item img {
-  height: 70vh;   /* Desktop: 70% of viewport */
-  width: 100%;
-  object-fit: cover;
-  filter: brightness(0.85);
-  transition: transform 0.6s ease;
-}
-.carousel-item img:hover { transform: scale(1.05); }
-
-/* Caption base style (visible by default; controlled by media queries below) */
-.carousel-caption {
-  background: rgba(0,0,0,0.5);
-  border-radius: 10px;
-  padding: 15px;
-  max-width: 92%;
-  margin-left: auto;
-  margin-right: auto;
-}
-.carousel-caption h5 {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 0.35rem;
-}
-.carousel-caption p { margin-bottom: 0; }
-
-/* Tablet & Mobile */
-@media (max-width: 992px) {
-  .carousel-item img {
-    height: 50vh;
+  .gradient-txt {
+    background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display:inline-block;
   }
-  .carousel-caption {
-    padding: 12px;
-  }
-  .carousel-caption h5 { font-size: 1.2rem; }
-  .carousel-caption p { font-size: 0.9rem; }
-}
 
-@media (max-width: 768px) {
-  .carousel-item img {
-    height: 35vh;  /* Smaller proportional height for phones */
+  .hero-ctas { display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; }
+  .cta-primary {
+    background: linear-gradient(90deg,var(--accent-a),var(--accent-b));
+    color:#fff;
+    border-radius:12px;
+    padding:.6rem 1.1rem;
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    border: none;
+    cursor: pointer;
+    font-weight:700;
+    transition: transform .18s ease, box-shadow .18s ease;
   }
-  .carousel-caption {
-    background: rgba(0,0,0,0.45);
-    padding: 10px;
-    border-radius: 8px;
-  }
-  .carousel-caption h5 {
-    font-size: 1rem;
-  }
-  .carousel-caption p {
-    font-size: 0.8rem;
-  }
-}
+  .cta-primary:hover, .cta-primary:focus { transform: translateY(-4px); box-shadow: 0 22px 50px rgba(0,0,0,.28); outline: none; }
 
-/* Very Small Phones */
-@media (max-width: 480px) {
-  .carousel-caption {
-    display: none; /* Hide captions for clean look on very small phones */
+  .cta-ghost {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text);
+    border-radius:12px;
+    padding:.55rem .95rem;
+    cursor: pointer;
+    transition: transform .18s, box-shadow .18s;
   }
-  .carousel-indicators button {
-    width: 12px;
-    height: 12px;
-    margin: 0 6px;
-  }
-}
+  .cta-ghost:hover, .cta-ghost:focus { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,.14); outline: none; }
 
-/* Larger indicators for touch */
-@media (max-width: 768px) {
-  .carousel-indicators button {
-    width: 10px;
-    height: 10px;
-    margin: 0 5px;
+  /* AI card */
+  .ai-hero-card {
+    width:320px;
+    max-width:100%;
+    background: var(--glass-bg);
+    border:1px solid var(--glass-border);
+    border-radius:14px;
+    padding:1rem;
+    box-shadow: 0 12px 40px rgba(0,0,0,.16);
   }
-}
+  .ai-hero-title { font-weight:700; margin:0 0 .25rem; }
+  .ai-hero-body { color:var(--muted); font-size:.95rem; margin-bottom:.8rem; }
 
-.post-preview .card {
-  border: none;
-  border-radius: 15px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
-}
-.post-preview .card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 12px 35px rgba(0, 123, 255, 0.4);
-}
-.post-preview .card-img-top {
-  border-top-left-radius: 15px;
-  border-top-right-radius: 15px;
-  transition: transform 0.4s ease;
-}
-.post-preview .card:hover .card-img-top { transform: scale(1.08); }
-.post-preview .card-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #007bff;
-  transition: color 0.3s ease;
-}
-.post-preview .card:hover .card-title { color: #0056b3; }
-.post-preview small.text-muted {
-  font-style: italic;
-  font-size: 0.85rem;
-  color: #6c757d;
-  position: relative;
-  padding-left: 1.2rem;
-}
-.post-preview small.text-muted::before {
-  content: "\f007";
-  font-family: "Font Awesome 5 Free";
-  font-weight: 900;
-  position: absolute;
-  left: 0;
-  color: #007bff;
-  font-size: 0.9rem;
-}
-.post-preview .card:hover small.text-muted { color: #0056b3; }
-.see-more-btn {
-  background: linear-gradient(45deg, #007bff, #0056b3);
-  color: #fff;
-  border: none;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-.see-more-btn:hover {
-  background: linear-gradient(45deg, #0056b3, #003d80);
-  transform: scale(1.05);
-  box-shadow: 0 8px 25px rgba(0, 123, 255, 0.5);
-}
-.btn-outline-primary {
-  background: linear-gradient(45deg, #007bff, #0056b3);
-  color: #fff !important;
-  border: none;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-.btn-outline-primary:hover {
-  background: linear-gradient(45deg, #0056b3, #003d80);
-  transform: scale(1.05);
-  box-shadow: 0 8px 25px rgba(0, 123, 255, 0.5);
-}
+  .ai-hero-actions { display:flex; gap:.5rem; }
+  .ai-small { flex:1; padding:.45rem .65rem; border-radius:10px; border:none; cursor:pointer; font-weight:700; }
+  .ai-ask { background: linear-gradient(90deg,var(--accent-a),var(--accent-b)); color:#fff; }
+  .ai-browse { background:transparent; border:1px solid var(--glass-border); color:var(--text); }
+
+  /* Carousel tweaks */
+  .carousel-inner .carousel-item img { transition: transform .6s ease; }
+  .carousel-inner .carousel-item:hover img { transform: scale(1.04); }
+
+  .carousel-caption { bottom: 24px; left: 24px; right: auto; text-align: left; max-width:60%; }
+  .carousel-caption h5 { font-weight:800; margin-bottom:.4rem; }
+  .carousel-caption p { margin-bottom:.6rem; color: rgba(255,255,255,0.9); }
+  .carousel-caption .meta { display:block; font-size:.85rem; opacity:.9; margin-bottom:.45rem; }
+
+  /* Featured grid & cards */
+  .section-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:1rem; }
+  .section-title { font-weight:800; font-size:1.35rem; margin:0; }
+
+  .boss-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; }
+  @media (max-width: 992px){ .boss-grid { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width: 640px){ .boss-grid { grid-template-columns:1fr; } }
+
+  .boss-card {
+    background: var(--glass-bg);
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid var(--glass-border);
+    display:flex;
+    flex-direction:column;
+    min-height:320px;
+    transition: transform .36s cubic-bezier(.18,.8,.32,1), box-shadow .36s, border-color .3s;
+    position:relative;
+  }
+
+  .boss-card:hover{
+    transform: translateY(-10px) scale(1.01);
+    box-shadow: 0 30px 90px rgba(2,6,23,0.45);
+    border-color: color-mix(in oklab, var(--accent-a) 35%, transparent);
+  }
+
+  .boss-card .card-media { width:100%; height:200px; background:#111; display:block; object-fit:cover; }
+  .boss-card .card-body { padding:1rem 1rem 1.2rem; display:flex; flex-direction:column; gap:.5rem; }
+  .boss-card .card-title { margin:0; font-weight:700; font-size:1.05rem; }
+  .boss-card .card-excerpt { color:var(--muted); font-size:.95rem; flex:1; }
+  .author-meta { font-size:.9rem; color:var(--muted); font-style:italic; margin-top:0.15rem; }
+
+  .read-btn {
+    margin-top:.6rem; align-self:flex-start; border-radius:10px; padding:.45rem .8rem; border:none;
+    background: linear-gradient(90deg,var(--accent-a),var(--accent-b)); color:#fff; cursor:pointer; font-weight:700;
+    transition: transform .18s, box-shadow .18s;
+  }
+  .read-btn:focus, .read-btn:hover { transform: translateY(-3px); box-shadow:0 14px 40px rgba(0,0,0,.28); outline:none; }
+
+  /* small helpers */
+  .muted { color:var(--muted); }
+  .ripple { position:relative; overflow:hidden; }
+  .ripple .r { position:absolute; border-radius:50%; transform:scale(0); opacity:.28; background: linear-gradient(90deg,var(--accent-a),var(--accent-b)); animation:rippleAnim .6s linear; pointer-events:none; }
+  @keyframes rippleAnim { to { transform:scale(4); opacity:0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .boss-card, .cta-primary, .read-btn { transition:none; transform:none !important; }
+  }
+
+  .focus-ring:focus { outline: 3px solid color-mix(in oklab,var(--accent-a) 30%, transparent); border-radius:10px; }
 </style>
 
-<!-- Carousel -->
-<div id="carouselExampleCaptions"
-     class="carousel slide mt-4 shadow-lg rounded-3 overflow-hidden"
-     data-bs-ride="carousel"
-     data-bs-interval="5000"
-     role="region"
-     aria-label="Homepage Featured Slides">
+<!-- HERO -->
+<section class="hero-wrap">
+  <div class="hero-inner container">
+    <div class="hero-left">
+      <h1 class="hero-title">Welcome to <span class="gradient-txt">MY BLOGS</span></h1>
+      <p class="hero-sub">Curated articles, beautiful design, and tools to help you write better.</p>
 
-  <div class="carousel-indicators">
-    <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active"
-            aria-current="true" aria-label="Slide 1"></button>
-    <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
-    <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
-  </div>
+      <div class="hero-ctas">
+        <button class="cta-primary ripple" role="link" aria-label="Explore Blogs" onclick="location.href='{% url 'all_blogs' %}'">
+          Explore Blogs
+        </button>
 
-  <div class="carousel-inner">
-    <div class="carousel-item active">
-      <img src="{% static 'images/firstt.png' %}"
-           class="d-block w-100"
-           alt="A desk with laptop and social media icons"
-           loading="lazy" />
-      <div class="carousel-caption">
-        <h5>Start Your Blogging Journey</h5>
-        <p>Share your ideas, stories, and knowledge with the world.</p>
+        <button class="cta-ghost focus-ring" role="button" aria-label="Create new blog" onclick="location.href='{% url 'blog' %}'">
+          Create
+        </button>
       </div>
     </div>
 
-    <div class="carousel-item">
-      <img src="{% static 'images/secondd.png' %}"
-           class="d-block w-100"
-           alt="Computer monitor showing blog design"
-           loading="lazy" />
-      <div class="carousel-caption">
-        <h5>Inspiration Meets Creativity</h5>
-        <p>Explore articles that spark ideas and discussions.</p>
-      </div>
-    </div>
+    <div class="ai-hero-card" aria-hidden="false" role="region" aria-label="AI Assistant quick card">
+      <div class="ai-hero-title"><i class="fa-solid fa-robot me-2"></i>AI Assistant</div>
+      <div class="ai-hero-body">Ask for outlines, ideas, or editing help — right from your site.</div>
 
-    <div class="carousel-item">
-      <img src="{% static 'images/third.jpeg' %}"
-           class="d-block w-100"
-           alt="Brush stroke effect with blog text"
-           loading="lazy" />
-      <div class="carousel-caption">
-        <h5>Write. Reflect. Repeat.</h5>
-        <p>Blogging is your personal canvas — paint with words.</p>
+      <div class="ai-hero-actions">
+        <button class="ai-small ai-ask ripple" id="heroAskAI" aria-label="Ask AI (open assistant)">Ask AI</button>
+        <a class="ai-small ai-browse" href="{% url 'all_blogs' %}" aria-label="Browse blogs">Browse</a>
       </div>
     </div>
   </div>
+</section>
 
-  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Previous</span>
-  </button>
-  <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Next</span>
-  </button>
-</div>
+<!-- CAROUSEL -->
+<section class="container mb-5">
+  {% with slides=blogs|slice:":3" %}
+  {% if slides %}
+  <div id="blogCarousel" class="carousel slide carousel-fade rounded-4 shadow-lg" data-bs-ride="carousel" data-bs-interval="5000" aria-label="Featured posts carousel">
+    <!-- indicators -->
+    <div class="carousel-indicators">
+      {% for s in slides %}
+        <button type="button" data-bs-target="#blogCarousel" data-bs-slide-to="{{ forloop.counter0 }}" class="{% if forloop.first %}active{% endif %}" aria-current="{% if forloop.first %}true{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+      {% endfor %}
+    </div>
 
-<!-- Blog Previews -->
-<div class="container mt-5">
-  {% if blogs %}
-  <div class="row g-4">
-    {% for blog in blogs %}
-    <div class="col-md-4 post-preview">
-      <div class="card h-100 position-relative">
-        {% if blog.image %}
-        <a href="{% url 'blog_detail' blog.id %}">
-          <img src="{{ blog.image.url }}" class="card-img-top" alt="Image for {{ blog.title }}" style="height: 200px; object-fit: cover;" loading="lazy">
-        </a>
+    <div class="carousel-inner rounded-4">
+      {% for s in slides %}
+      <div class="carousel-item {% if forloop.first %}active{% endif %}">
+        {% if s.image %}
+          <img src="{{ s.image.url }}" class="d-block w-100" alt="{{ s.title|escape }}" style="height:420px;object-fit:cover;">
         {% else %}
-        <a href="{% url 'blog_detail' blog.id %}">
-          <img src="{% static 'images/default_blog.jpg' %}" class="card-img-top" alt="Default blog image" style="height: 200px; object-fit: cover;" loading="lazy">
-        </a>
+          <div class="d-flex align-items-center justify-content-center bg-secondary text-white" style="height:420px;">
+            <span>No Image</span>
+          </div>
         {% endif %}
-
-        <div class="card-body d-flex flex-column justify-content-between">
-          <div>
-            <h5 class="card-title">
-              <a href="{% url 'blog_detail' blog.id %}" class="text-decoration-none">{{ blog.title|truncatechars:50 }}</a>
-            </h5>
-            <p class="card-text text-muted small">{{ blog.content|striptags|truncatewords:20 }}</p>
-          </div>
-          <div class="d-flex justify-content-between align-items-center mt-auto">
-            <small class="text-muted">By {{ blog.author }}</small>
-            <a href="{% url 'blog_detail' blog.id %}" class="btn btn-outline-primary btn-sm">Read More →</a>
-          </div>
+        <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded-3 p-3">
+          <h5 class="fw-bold">{{ s.title }}</h5>
+          <p class="mb-1">{{ s.content|truncatewords:18 }}</p>
+          <span class="meta">By {{ s.author.get_full_name|default:s.author.username|escape }}</span>
+          <br>
+          <a href="{% url 'blog_detail' s.id %}" class="btn btn-sm mt-2" style="background:linear-gradient(90deg,var(--accent-a),var(--accent-b));color:#fff;border-radius:8px;">Read More</a>
         </div>
       </div>
+      {% endfor %}
     </div>
+
+    <button class="carousel-control-prev" type="button" data-bs-target="#blogCarousel" data-bs-slide="prev" aria-label="Previous slide">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#blogCarousel" data-bs-slide="next" aria-label="Next slide">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
+  </div>
+  {% endif %}
+  {% endwith %}
+</section>
+
+<!-- FEATURED BLOGS -->
+<section class="container py-4" aria-labelledby="featured-heading">
+  <div class="section-head">
+    <h2 id="featured-heading" class="section-title">Featured <span class="gradient-txt">Blogs</span></h2>
+  </div>
+
+  <div class="boss-grid" id="bossGrid" aria-live="polite">
+    {% for blog in blogs %}
+    <article class="boss-card" tabindex="0" role="article" aria-labelledby="btitle-{{ forloop.counter }}">
+      {% if blog.image %}
+        <img class="card-media boss-lazy" data-src="{{ blog.image.url }}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="{{ blog.title|escape }}" />
+      {% else %}
+        <div class="card-media d-flex align-items-center justify-content-center" style="background:linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.06));color:var(--muted);font-weight:600;">
+          No image
+        </div>
+      {% endif %}
+
+      <div class="card-body">
+        <h3 id="btitle-{{ forloop.counter }}" class="card-title">{{ blog.title }}</h3>
+        <p class="card-excerpt">{{ blog.content|truncatewords:22 }}</p>
+        <div class="author-meta">By {{ blog.author.get_full_name|default:blog.author.username|escape }}</div>
+
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <a href="{% url 'blog_detail' blog.id %}" class="read-btn ripple" aria-label="Read more about {{ blog.title|escape }}">Read More</a>
+          <span class="muted" style="font-size:.85rem;margin-left:auto;">{{ blog.created_at|date:"M j, Y" }}</span>
+        </div>
+      </div>
+    </article>
+    {% empty %}
+      <p class="muted">No blogs yet — check back soon.</p>
     {% endfor %}
   </div>
+</section>
 
-  <!-- See More Button -->
-  <div class="text-center mt-4">
-    <a href="{% url 'all_blogs' %}" class="btn see-more-btn px-4 py-2 shadow-sm rounded-pill">See More</a>
-  </div>
-  {% else %}
-  <p>No blogs available.</p>
-  {% endif %}
-</div>
-
-<!-- Small touch-swipe handler (makes carousel feel natural on phones) -->
+<!-- PAGE-SPECIFIC SCRIPTS -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  var carouselEl = document.getElementById('carouselExampleCaptions');
-  if (!carouselEl) return;
+  (function () {
+    // refresh AOS (base may have initialized it already)
+    try { if (window.AOS) AOS.refresh(); } catch (e) {}
 
-  var touchStartX = 0;
-  var touchEndX = 0;
-  carouselEl.addEventListener('touchstart', function (e) {
-    touchStartX = e.changedTouches[0].screenX;
-  }, {passive: true});
-  carouselEl.addEventListener('touchend', function (e) {
-    touchEndX = e.changedTouches[0].screenX;
-    var diff = touchStartX - touchEndX;
-    if (Math.abs(diff) > 40) {
-      // use Bootstrap Carousel API
-      var carouselInstance = bootstrap.Carousel.getInstance(carouselEl) || new bootstrap.Carousel(carouselEl);
-      if (diff > 0) {
-        carouselInstance.next();
-      } else {
-        carouselInstance.prev();
-      }
+    // Ripple effect
+    document.querySelectorAll('.ripple').forEach(el=>{
+      el.addEventListener('click', function(e){
+        const r = document.createElement('span');
+        r.className = 'r';
+        const rect = el.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        r.style.width = r.style.height = size + 'px';
+        r.style.left = (e.clientX - rect.left - size/2) + 'px';
+        r.style.top = (e.clientY - rect.top - size/2) + 'px';
+        el.appendChild(r);
+        setTimeout(()=> r.remove(), 600);
+      });
+    });
+
+    // Lazy load images (.boss-lazy)
+    const lazyImgs = Array.from(document.querySelectorAll('img.boss-lazy'));
+    if ('IntersectionObserver' in window && lazyImgs.length) {
+      const io = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src || img.getAttribute('data-src');
+            img.onload = () => img.classList.add('loaded');
+            obs.unobserve(img);
+          }
+        });
+      }, { rootMargin: '200px' });
+      lazyImgs.forEach(i => io.observe(i));
+    } else {
+      lazyImgs.forEach(img => { img.src = img.dataset.src || img.getAttribute('data-src'); img.onload = ()=> img.classList.add('loaded'); });
     }
-  }, {passive: true});
-});
-</script>
 
+    // Card tilt (subtle)
+    document.querySelectorAll('.boss-card').forEach(card=>{
+      let raf = null;
+      const handle = (e) => {
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width;
+        const py = (e.clientY - r.top) / r.height;
+        const rx = (py - .5) * -6;
+        const ry = (px - .5) * 6;
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(()=> {
+          card.style.transform = `perspective(900px) translateZ(2px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px)`;
+        });
+      };
+      card.addEventListener('mousemove', handle);
+      card.addEventListener('mouseleave', ()=> { cancelAnimationFrame(raf); card.style.transform = ''; });
+      card.addEventListener('focus', ()=> card.style.transform = 'translateY(-8px)');
+      card.addEventListener('blur', ()=> card.style.transform = '');
+    });
+
+    // Hook hero ask AI to open assistant in base (fallback to clicking sidebar)
+    const heroAsk = document.getElementById('heroAskAI');
+    if (heroAsk) {
+      heroAsk.addEventListener('click', function(e){
+        e.preventDefault();
+        try {
+          if (typeof openAIPopup === 'function') return openAIPopup();
+        } catch(_) {}
+        const sidebar = document.getElementById('openAI');
+        if (sidebar) sidebar.click();
+      });
+      heroAsk.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); heroAsk.click(); }
+      });
+    }
+
+    // Bootstrap carousel: ensure it autoplays and pauses on hover
+    try {
+      const carouselEl = document.getElementById('blogCarousel');
+      if (carouselEl && window.bootstrap && bootstrap.Carousel) {
+        const carousel = bootstrap.Carousel.getOrCreateInstance(carouselEl, { interval: 5000, pause: 'hover', ride: 'carousel' });
+        // pause on focus within carousel for accessibility
+        carouselEl.addEventListener('focusin', () => carousel.pause());
+        carouselEl.addEventListener('focusout', () => carousel.cycle());
+      }
+    } catch(e){ console.warn(e); }
+
+    // Keyboard: Enter on card opens Read More
+    document.querySelectorAll('.boss-card').forEach(c => {
+      c.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') {
+          const link = c.querySelector('a.read-btn, a.btn');
+          if (link) link.click();
+        }
+      });
+    });
+
+  })();
+</script>
 {% endblock %}

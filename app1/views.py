@@ -112,7 +112,7 @@ def blog_view(request):
     else:
         form = BlogsForms()
 
-    blogs = Blogs.objects.all().order_by('-id')
+    blogs = Blogs.objects.all().order_by('-id')[:2]
     return render(request, 'blog_page.html', {'form': form, 'blogs': blogs})
 
 

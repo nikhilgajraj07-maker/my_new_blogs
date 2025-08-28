@@ -1,96 +1,124 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <!-- Mobile viewport -->
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %} My Site {% endblock %}</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}My Blogs{% endblock %}</title>
+  <meta name="description" content="My Blogs — immersive, modern design and great writing." />
+  <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png" />
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}" />
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <!-- Bootstrap CSS (keep versions consistent) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Bootstrap (only utilities used) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- Your site CSS -->
-  <link rel="stylesheet" href="{% static 'css/site.css' %}" />
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
-  <!-- Highlight.js for code syntax highlighting -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <!-- highlight.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
-  <!-- IMPORTANT: load CKEditor **once** here (super-build). Do NOT load any other CKEditor build anywhere else. -->
-  <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/super-build/ckeditor.js"></script>
+  <!-- AOS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
 
-  <meta name="google-site-verification" content="9r61zs3yCX6mCLG6_MyYsHzk8Ec-agEL95e4KEII-r0" />
+  <!-- Apply theme early to avoid FOUC -->
+  <script>
+    (function () {
+      try {
+        const saved = localStorage.getItem('theme') || 'auto';
+        if (saved === 'light') document.documentElement.classList.add('light-mode');
+        else if (saved === 'dark') document.documentElement.classList.remove('light-mode');
+        else if (saved === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          document.documentElement.classList.add('light-mode');
+        }
+      } catch (e) { }
+    })();
+  </script>
 
   <style>
-    /* ================== your original styles (kept) ================== */
+    /* ====== Design tokens ====== */
+    :root {
+      --dock-space: 96px;
+      --container-max: 1200px;
+
+      --bg-dark-a: #0c1221;
+      --bg-dark-b: #10182d;
+      --bg-dark-c: #0a0f1c;
+      --content-dark: rgba(255, 255, 255, 0.03);
+      --glass-dark: rgba(255, 255, 255, 0.06);
+      --text-dark: #e8eefc;
+      --muted-dark: #94a3b8;
+
+      --bg-light-a: #f9fafb;
+      --bg-light-b: #f3f4f6;
+      --bg-light-c: #ffffff;
+      --content-light: rgba(12, 18, 26, 0.04);
+      --glass-light: rgba(255, 255, 255, 0.9);
+      --text-light: #0b1220;
+      --muted-light: #6b7280;
+
+      --accent-a: #6366f1;
+      --accent-b: #ec4899;
+
+      --card-radius: 14px;
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.45);
+      --glass-border-dark: rgba(255, 255, 255, 0.08);
+      --glass-border-light: rgba(0, 0, 0, 0.08);
+    }
+
+    html.light-mode {
+      --bg-a: var(--bg-light-a);
+      --bg-b: var(--bg-light-b);
+      --bg-c: var(--bg-light-c);
+      --content-bg: var(--content-light);
+      --glass-bg: var(--glass-light);
+      --text: var(--text-light);
+      --muted: var(--muted-light);
+      --glass-border: var(--glass-border-light);
+      --accent-a: #2563eb;
+      --accent-b: #d946ef;
+    }
+
+    html:not(.light-mode) {
+      --bg-a: var(--bg-dark-a);
+      --bg-b: var(--bg-dark-b);
+      --bg-c: var(--bg-dark-c);
+      --content-bg: var(--content-dark);
+      --glass-bg: var(--glass-dark);
+      --text: var(--text-dark);
+      --muted: var(--muted-dark);
+      --glass-border: var(--glass-border-dark);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
     body {
-      position: relative;
-      overflow-x: hidden;
+      height: 100%
     }
 
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background:
-        radial-gradient(circle at 20% 30%, rgba(0, 123, 255, 0.4), transparent 70%),
-        radial-gradient(circle at 80% 70%, rgba(0, 198, 255, 0.35), transparent 60%),
-        radial-gradient(circle at 50% 100%, rgba(0, 86, 179, 0.4), transparent 70%);
-      animation: aurora 21s ease-in-out infinite alternate;
-      z-index: -2;
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      color: var(--text);
+      background: linear-gradient(120deg, var(--bg-a), var(--bg-b), var(--bg-c));
+      background-size: 300% 300%;
+      animation: bgShift 26s ease-in-out infinite;
+      transition: background .45s, color .25s;
+      padding-bottom: 96px;
     }
 
-    body::after {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: radial-gradient(rgba(255, 255, 255, 0.3) 1.5px, transparent 1.5px);
-      background-size: 100px 100px;
-      animation: floatDots 90s linear infinite;
-      z-index: -1;
-      opacity: 0.4;
-    }
-
-    @keyframes aurora {
-      0% {
-        transform: translateY(0) scale(1);
-        filter: blur(20px);
-      }
-
-      50% {
-        transform: translateY(-10px) scale(1.03);
-        filter: blur(25px);
-      }
-
-      100% {
-        transform: translateY(0) scale(1);
-        filter: blur(20px);
-      }
-    }
-
-    @keyframes floatDots {
-      from {
-        background-position: 0 0
-      }
-
-      to {
-        background-position: 300px 600px
-      }
-    }
-
-    @keyframes navbarGradient {
+    @keyframes bgShift {
       0% {
         background-position: 0% 50%
       }
@@ -104,308 +132,522 @@
       }
     }
 
-    .navbar {
-      background: linear-gradient(270deg, #212529, #343a40, #0dcaf0, #343a40, #212529);
-      background-size: 400% 400%;
-      animation: navbarGradient 10s ease infinite;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    @media (min-width: 992px) {
+      body {
+        padding-left: var(--dock-space);
+      }
     }
 
-    form.d-flex {
-      position: relative;
-      background: rgba(255, 255, 255, .15);
-      border-radius: 50px;
-      padding: 4px 10px 4px 35px;
-      border: 2px solid rgba(255, 255, 255, .3);
-      backdrop-filter: blur(8px);
-      transition: all .3s ease;
+    @media (max-width: 991.98px) {
+      body {
+        padding-left: 0;
+      }
     }
 
-    form.d-flex:focus-within {
-      border-color: #0dcaf0;
-      box-shadow: 0 0 15px rgba(13, 202, 240, .6);
+    :focus-visible {
+      outline: 3px solid color-mix(in oklab, var(--accent-a) 40%, transparent);
+      border-radius: 8px
     }
 
-    form input[type='search'] {
-      border: none;
-      outline: none;
-      background: transparent;
-      border-radius: 50px;
-      padding: 8px 14px;
-      width: 180px;
-      transition: width .4s ease, color .3s ease;
-      font-size: 15px;
-      color: #fff;
-    }
-
-    .btn-outline-success {
-      border-radius: 50%;
-      padding: 8px 12px;
-      font-weight: 500;
-      border: none;
-      margin-left: 6px;
-      background: linear-gradient(135deg, #0dcaf0, #007bff);
+    /* ===== Pill Dock ===== */
+    .pill-dock {
+      position: fixed;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
       display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 8px rgba(13, 213, 240, .4);
-    }
-
-    .custom-dropdown-menu {
-      min-width: 180px;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    footer {
-      background: linear-gradient(90deg, #1e1e2f, #343a40, #1e1e2f);
-      color: #ccc;
-      padding: 40px 0;
-      margin-top: 50px;
-    }
-
-    .avatar-badge {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #0dcaf0, #007bff);
-      color: #fff;
-      box-shadow: 0 0 8px rgba(13, 202, 240, .6);
-    }
-
-    /* === AI popup helper styles (kept) === */
-    #ai-floating-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      border: none;
-      background: linear-gradient(135deg, #4f46e5, #3b82f6);
-      color: #fff;
-      font-size: 26px;
-      cursor: pointer;
-      box-shadow: 0 8px 24px rgba(31, 41, 55, 0.18);
-      z-index: 2000;
-    }
-
-    #ai-popup {
-      position: fixed;
-      bottom: 90px;
-      right: 20px;
-      width: 360px;
-      max-height: 520px;
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 20px 45px rgba(2, 6, 23, .25);
-      display: none;
       flex-direction: column;
-      overflow: hidden;
-      z-index: 2001;
-    }
-
-    #ai-popup-header {
-      background: linear-gradient(135deg, #4f46e5, #3b82f6);
-      color: #fff;
-      padding: 12px;
-      font-weight: 600;
-      display: flex;
-      justify-content: space-between;
+      gap: 12px;
       align-items: center;
-      cursor: move;
-    }
-
-    #ai-popup-body {
       padding: 12px;
-      overflow-y: auto;
-      font-size: .95rem;
-      background: #f9fafb;
+      width: 76px;
+      border-radius: 18px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(14px) saturate(120%);
+      box-shadow: var(--shadow-lg);
+      z-index: 1400;
     }
 
-    #ai-response .ai-bubble {
-      background: #eef2ff;
+    .pill-item {
+      width: 56px;
+      height: 56px;
       border-radius: 12px;
-      padding: 10px 14px;
-      margin-bottom: 12px;
-      color: #111827;
-      white-space: pre-wrap;
-    }
-
-    #ai-response pre {
-      background: #0f172a;
-      color: #e5e7eb;
-      padding: 12px;
-      border-radius: 10px;
-      overflow-x: auto;
-      margin-top: 8px;
-    }
-
-    #ai-input {
-      width: 100%;
-      height: 90px;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 10px;
-      background: #fff;
-      resize: none;
-    }
-
-    .ai-send-btn {
-      margin-top: 8px;
-      width: 100%;
-      background: linear-gradient(135deg, #4f46e5, #3b82f6);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 10px 14px;
-      font-weight: 600;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+      border: 1px solid var(--glass-border);
       cursor: pointer;
-      box-shadow: 0 6px 16px rgba(59, 130, 246, .35);
+      position: relative;
+      overflow: hidden;
+      transition: transform .18s, box-shadow .18s;
     }
 
-    .ai-send-btn:hover {
-      transform: translateY(-1px);
+    .pill-item:hover {
+      transform: translateY(-6px) scale(1.06);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+      color: #fff
     }
 
-    #insert-ai-btn {
-      display: none;
-      margin-top: 8px;
-      padding: 8px 12px;
-      background: #2196F3;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      width: 100%;
+    .pill-item[data-tip] {
+      position: relative;
     }
 
-    #ai-popup-resizer {
+    .pill-item[data-tip]::after {
+      content: attr(data-tip);
       position: absolute;
-      bottom: 6px;
-      right: 6px;
-      width: 14px;
-      height: 14px;
-      cursor: se-resize;
-      z-index: 2002;
+      left: 76px;
+      top: 50%;
+      transform: translateY(-50%) translateX(-6px);
+      background: var(--glass-bg);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .18s;
     }
 
-    #ai-popup-resizer::after {
-      content: '';
-      position: absolute;
-      bottom: 2px;
-      right: 2px;
-      width: 10px;
-      height: 10px;
-      border-right: 2px solid rgba(0, 0, 0, .12);
-      border-bottom: 2px solid rgba(0, 0, 0, .12);
+    .pill-item[data-tip]:hover::after {
+      opacity: 1;
+      transform: translateY(-50%) translateX(0)
     }
 
-    @media (max-width: 576px) {
-      #ai-floating-btn {
+    @media(max-width:768px) {
+      .pill-dock {
+        left: 50%;
         bottom: 16px;
-        right: 16px;
+        top: auto;
+        transform: translateX(-50%);
+        flex-direction: row;
+        width: auto;
+        padding: 8px
       }
 
-      #ai-popup {
-        bottom: 80px;
-        right: 12px;
-        width: calc(100vw - 24px);
+      .pill-item[data-tip]::after {
+        left: 50%;
+        top: -48px;
+        transform: translate(-50%, -6px)
+      }
+    }
+
+    /* ripple */
+    .ripple {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ripple span.r {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      opacity: .6;
+      background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+      animation: ripple .6s linear
+    }
+
+    @keyframes ripple {
+      to {
+        transform: scale(4);
+        opacity: 0
+      }
+    }
+
+    /* ===== Search Drawer ===== */
+    #searchDrawer {
+      position: fixed;
+      left: 90px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 420px;
+      max-width: calc(100vw - 120px);
+      z-index: 1500;
+      display: none
+    }
+
+    #searchDrawer.open {
+      display: block
+    }
+
+    #searchDrawer form {
+      background: var(--content-bg);
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 30px 80px rgba(2, 6, 23, 0.45);
+      transform: scale(.99);
+      transition: transform .22s, opacity .18s
+    }
+
+    #searchDrawer.open form {
+      transform: scale(1);
+      opacity: 1
+    }
+
+    #searchBox {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      background: transparent;
+      color: var(--text)
+    }
+
+    /* ===== Main / cards / masonry ===== */
+    .site-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: 28px
+    }
+
+    .content-card {
+      background: var(--content-bg);
+      border-radius: var(--card-radius);
+      padding: 20px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .18);
+      transition: transform .32s cubic-bezier(.2, .8, .3, 1), box-shadow .32s
+    }
+
+    .content-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .35)
+    }
+
+    .cards-grid {
+      column-count: 3;
+      column-gap: 20px;
+      margin-top: 18px
+    }
+
+    .cards-grid .card {
+      display: inline-block;
+      width: 100%;
+      margin: 0 0 20px
+    }
+
+    @media(max-width:992px) {
+      .cards-grid {
+        column-count: 2
+      }
+    }
+
+    @media(max-width:600px) {
+      .cards-grid {
+        column-count: 1
+      }
+    }
+
+    img.lazy {
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .45s ease, transform .45s
+    }
+
+    img.lazy.loaded {
+      opacity: 1;
+      transform: none
+    }
+
+    /* ===== Footer ===== */
+    footer {
+      margin-top: 48px;
+      padding: 36px 0;
+      color: var(--muted);
+      background: transparent;
+      border-top: 2px solid transparent;
+      border-image: linear-gradient(90deg, var(--accent-a), var(--accent-b)) 1
+    }
+
+    .footer-social a {
+      display: inline-grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      color: var(--text);
+      margin-right: 8px;
+      transition: transform .12s
+    }
+
+    .footer-social a:hover {
+      transform: translateY(-4px);
+      background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+      color: white
+    }
+
+    /* ===== AI Popup ===== */
+    .ai-popup {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      width: 420px;
+      max-width: calc(100vw - 48px);
+      border-radius: 14px;
+      border: 1px solid var(--glass-border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      backdrop-filter: blur(12px);
+      box-shadow: 0 30px 90px rgba(2, 6, 23, 0.6);
+      z-index: 1600;
+      display: none;
+      transform: translateY(28px) scale(.98);
+      opacity: 0;
+      transition: transform .38s cubic-bezier(.2, .9, .3, 1), opacity .28s
+    }
+
+    .ai-popup.open {
+      display: block;
+      transform: translateY(0) scale(1);
+      opacity: 1
+    }
+
+    .ai-header {
+      padding: 12px 14px;
+      background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      cursor: grab
+    }
+
+    .ai-body {
+      padding: 12px 14px;
+      max-height: 320px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.005))
+    }
+
+    .ai-footer {
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .ai-footer textarea {
+      width: 100%;
+      min-height: 84px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(0, 0, 0, 0.03);
+      color: var(--text);
+      resize: vertical
+    }
+
+    .ai-row {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .ai-btn {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+      color: white;
+      font-weight: 600;
+      cursor: pointer
+    }
+
+    .ai-insert {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer
+    }
+
+    .ai-bubble {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      max-width: 86%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: .95rem;
+      line-height: 1.35
+    }
+
+    .ai-bubble.ai {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.03)
+    }
+
+    .ai-bubble.user {
+      align-self: flex-end;
+      background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+      color: white
+    }
+
+    .ai-bubble .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: .85rem;
+      flex: 0 0 36px
+    }
+
+    .ai-bubble .meta {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .ai-bubble .actions {
+      margin-left: auto;
+      display: flex;
+      gap: 6px;
+      align-items: center
+    }
+
+    .bubble-copy {
+      border: none;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px
+    }
+
+    .typing-dots {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center
+    }
+
+    .typing-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: .6;
+      animation: bounce .7s infinite alternate
+    }
+
+    .typing-dots span:nth-child(2) {
+      animation-delay: .12s
+    }
+
+    .typing-dots span:nth-child(3) {
+      animation-delay: .24s
+    }
+
+    @keyframes bounce {
+      from {
+        transform: translateY(0);
+        opacity: .6
+      }
+
+      to {
+        transform: translateY(-6px);
+        opacity: 1
+      }
+    }
+
+    .cg-toast {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 96px;
+      background: rgba(0, 0, 0, 0.76);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      z-index: 9999;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3)
+    }
+
+    /* reduced motion preference */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important
       }
     }
   </style>
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
-        <img src="{% static 'images/Screenshot 2025-08-14 091503.jpg' %}" alt="MB Logo" style="height: 60px; margin-right: 10px;" />
-        <span class="fs-1">MY BLOGS</span>
-      </a>
+  <!-- ================= PILL DOCK ================= -->
+  <aside class="pill-dock" aria-label="Quick actions">
+    <a href="{% url 'home' %}" class="pill-item ripple" data-tip="Home" aria-label="Home"><i
+        class="fa-solid fa-house"></i></a>
+    <a href="{% url 'all_blogs' %}" class="pill-item ripple" data-tip="All Blogs" aria-label="All Blogs"><i
+        class="fa-regular fa-newspaper"></i></a>
+    <a href="{% url 'blog' %}" class="pill-item ripple" data-tip="Create Blog" aria-label="Create Blog"><i
+        class="fa-solid fa-pen-to-square"></i></a>
 
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
-        aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+    <button id="openSearch" class="pill-item ripple" data-tip="Search" aria-haspopup="dialog"
+      aria-controls="searchDrawer" aria-label="Open search"><i class="fa-solid fa-magnifying-glass"></i></button>
 
-      <div class="collapse navbar-collapse" id="navbarContent">
-        <!-- Left links -->
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+    <div style="height:6px; width:44px;"></div>
 
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="functionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Blog Options</a>
-            <ul class="dropdown-menu custom-dropdown-menu shadow" aria-labelledby="functionDropdown">
-              <li><a class="dropdown-item" href="{% url 'all_blogs' %}"><i class="bi bi-journal-text me-2 text-info"></i>All Blogs</a></li>
-              <li><a class="dropdown-item" href="{% url 'blog' %}"><i class="bi bi-pencil-square me-2 text-warning"></i>Create Blogs</a></li>
-            </ul>
-          </li>
+    {% if user.is_authenticated %}
+    <a href="{% url 'profile' %}" class="pill-item ripple" data-tip="Profile" aria-label="Profile">
+      {% if user.profile and user.profile.initials %}
+      <span style="font-weight:700;color:inherit">{{ user.profile.initials }}</span>
+      {% elif user.first_name %}
+      <span style="font-weight:700;color:inherit">{{ user.first_name|slice:':1'|upper }}</span>
+      {% else %}
+      <i class="fa-solid fa-user"></i>
+      {% endif %}
+    </a>
+    {% else %}
+    <a href="{% url 'login' %}" class="pill-item ripple" data-tip="Login" aria-label="Login"><i
+        class="fa-solid fa-right-to-bracket"></i></a>
+    {% endif %}
 
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="optionsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Options</a>
-            <ul class="dropdown-menu custom-dropdown-menu shadow" aria-labelledby="optionsDropdown">
-              <li><a class="dropdown-item" href="{% url 'about' %}"><i class="bi bi-info-circle me-2 text-primary"></i>About Us</a></li>
-              <li><a class="dropdown-item" href="{% url 'contact' %}"><i class="bi bi-envelope me-2 text-success"></i>Contact Us</a></li>
-              <li><a class="dropdown-item" href="{% url 'feedback' %}"><i class="bi bi-chat-dots me-2 text-warning"></i>Feedback</a></li>
-            </ul>
-          </li>
-        </ul>
+    <button id="themeToggle" class="pill-item ripple" data-tip="Toggle theme" aria-pressed="false"
+      aria-label="Toggle theme"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
 
-        <!-- Right side: Search + User -->
-        <div class="nav-utility d-flex align-items-center gap-2">
-          <form class="d-flex me-2" role="search" method="get" action="{% url 'all_blogs' %}">
-            <input class="form-control me-2" type="search" name="q" value="{{ request.GET.q|default_if_none:'' }}" placeholder="Search..." aria-label="Search" />
-            <button class="btn btn-outline-success" type="submit" aria-label="Search"><i class="bi bi-search"></i></button>
-          </form>
+    <button id="openAI" class="pill-item ripple" data-tip="AI Assistant" aria-haspopup="dialog" aria-controls="aiPopup"
+      aria-label="Open AI assistant"><i class="fa-solid fa-robot"></i></button>
+  </aside>
 
-          {% if user.is_authenticated %}
-            <a href="{% url 'profile' %}" class="btn btn-outline-light d-flex align-items-center gap-2 btn-auth">
-              <span class="avatar-badge">
-                {% if user.profile and user.profile.initials %}
-                  {{ user.profile.initials }}
-                {% else %}
-                  {% if user.first_name and user.last_name %}
-                    {{ user.first_name|slice:':1'|upper }}{{ user.last_name|slice:':1'|upper }}
-                  {% else %}
-                    {{ user.username|slice:':1'|upper }}{{ user.username|slice:'1:2'|upper|default:user.username|slice:':1'|upper }}
-                  {% endif %}
-                {% endif %}
-              </span>
-              {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}
-            </a>
-          {% else %}
-            <a href="{% url 'login' %}" class="btn btn-outline-light btn-auth">Login</a>
-          {% endif %}
-        </div>
+  <!-- ================= SEARCH DRAWER ================= -->
+  <div id="searchDrawer" role="dialog" aria-hidden="true"
+    style="position:fixed;left:90px;top:50%;transform:translateY(-50%);width:420px;max-width:calc(100vw - 120px);z-index:1500;display:none;">
+    <form method="get" action="{% url 'all_blogs' %}">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="searchBox" name="q" type="search" placeholder="Search blogs, tags, authors..."
+          value="{{ request.GET.q|default_if_none:'' }}" aria-label="Search"
+          style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;color:var(--text)" />
+        <button type="submit" class="ai-btn" style="border-radius:10px;padding:8px 12px;" aria-label="Search"><i
+            class="fa-solid fa-magnifying-glass"></i></button>
+        <button id="closeSearch" type="button" class="ai-insert" style="border-radius:10px;padding:8px 10px;"
+          aria-label="Close search"><i class="fa-solid fa-xmark"></i></button>
       </div>
-    </div>
-  </nav>
-
-  <div class="container mt-4">
-    {% block pagecontent %}{% endblock %}
+      <div style="margin-top:8px;color:var(--muted);font-size:12px">Press <kbd>Esc</kbd> to close</div>
+    </form>
   </div>
 
-  <!-- Floating button -->
-  <button id="ai-floating-btn" aria-label="Open AI Assistant">🤖</button>
-
-  <!-- AI popup -->
-  <div id="ai-popup" role="dialog" aria-modal="false" aria-hidden="true">
-    <div id="ai-popup-header">
-      <span>AI Assistant</span>
-      <button id="ai-popup-close" aria-label="Close">✖</button>
+  <!-- ================= MAIN CONTENT ================= -->
+  <main class="site-container" role="main" aria-live="polite">
+    <div class="content-card" data-aos="fade-in" data-aos-delay="120">
+      {% block pagecontent %}{% endblock %}
     </div>
-    <div id="ai-popup-body">
-      <div id="ai-response" aria-live="polite"></div>
-      <textarea id="ai-input" placeholder="👋 Hi! I’m your AI Assistant. "></textarea>
-      <button id="ai-send" class="ai-send-btn">Send</button>
-    </div>
-    <div id="ai-popup-resizer" title="Drag to resize"></div>
-  </div>
 
+    <!-- Masonry listing (use .card items inside) -->
+    <div class="cards-grid" data-aos="fade-up" data-aos-delay="160" aria-live="polite" aria-label="Blog list"></div>
+  </main>
+
+  <!-- Footer -->
   <footer>
     <div class="container text-center">
       <div class="row mb-3">
@@ -425,279 +667,348 @@
         <div class="col-md-4">
           <h5>Follow Us</h5>
           <div class="footer-social">
-            <a href="#"><i class="bi bi-facebook"></i></a>
-            <a href="#"><i class="bi bi-twitter"></i></a>
-            <a href="#"><i class="bi bi-instagram"></i></a>
-            <a href="#"><i class="bi bi-linkedin"></i></a>
+            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
           </div>
         </div>
       </div>
-      <div class="footer-bottom text-center">&copy; {{ now.year }} My Blogs. All rights reserved.</div>
+      <p>&copy; {% now "Y" %} My Blogs. All rights reserved.</p>
     </div>
   </footer>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <!-- ================= AI ASSISTANT POPUP ================= -->
+  <div id="aiPopup" class="ai-popup" role="dialog" aria-hidden="true" aria-labelledby="aiTitle" aria-modal="false">
+    <div class="ai-header" id="aiHeader" aria-label="AI Assistant Header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <i class="fa-solid fa-robot" aria-hidden="true"></i>
+        <span id="aiTitle">AI Assistant</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="aiInsertBtn" class="ai-insert"
+          style="display:none;padding:8px 10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.06);color:inherit"
+          aria-label="Insert suggestion">Insert</button>
+        <button id="aiClose" aria-label="Close AI assistant"
+          style="background:none;border:none;color:white;font-size:18px;line-height:1">✖</button>
+      </div>
+    </div>
 
-  <!-- Your site JS -->
-  <script src="{% static 'js/app.js' %}"></script>
+    <div id="aiBody" class="ai-body" aria-live="polite">
+      <div id="aiResponseArea"></div>
+    </div>
+
+    <div class="ai-footer">
+      <textarea id="aiInput" placeholder="Ask me to improve headlines, write intros, suggest tags..."
+        aria-label="AI input"></textarea>
+      <div class="ai-row">
+        <button id="aiSend" class="ai-btn" aria-label="Send to AI">Send</button>
+        <button id="aiCopy" class="ai-insert" style="padding:10px 12px" aria-label="Copy latest">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast holder -->
+  <div id="cg_toast_holder" aria-hidden="true"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
 
   <script>
+    // helpers
+    function showToast(msg, ms = 2200) {
+      try {
+        const holder = document.getElementById('cg_toast_holder');
+        const t = document.createElement('div');
+        t.className = 'cg-toast';
+        t.textContent = msg;
+        holder.appendChild(t);
+        setTimeout(() => t.style.opacity = '1', 20);
+        setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, ms);
+      } catch (e) { console.log(e); }
+    }
+
+    function getCSRFToken() {
+      let cookieValue = null;
+      const cookies = document.cookie ? document.cookie.split(';') : [];
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, 10) === 'csrftoken=') { cookieValue = decodeURIComponent(cookie.substring(10)); break; }
+      }
+      return cookieValue;
+    }
+
+    // safe escaped username for avatar initials
+    const userName = "{{ user.first_name|default:user.username|default:''|escapejs }}";
+
     document.addEventListener('DOMContentLoaded', function () {
-      // safety helper for highlight
-      if (window.hljs && typeof hljs.highlightAll === 'function') {
-        try { hljs.highlightAll(); } catch (e) { }
-      }
+      // init AOS & highlight.js
+      try { if (window.AOS) AOS.init({ duration: 650, once: true, easing: 'cubic-bezier(.2,.8,.2,1)' }); } catch (e) { }
+      try { if (window.hljs && typeof hljs.highlightAll === 'function') hljs.highlightAll(); } catch (e) { }
 
-      // navbar hover (desktop)
-      if (window.matchMedia('(min-width: 992px)').matches && window.matchMedia('(hover: hover)').matches) {
-        document.querySelectorAll('.navbar .dropdown').forEach(function (dropdown) {
-          dropdown.addEventListener('mouseenter', function () {
-            const toggle = dropdown.querySelector('[data-bs-toggle="dropdown"]');
-            if (!toggle) return;
-            bootstrap.Dropdown.getOrCreateInstance(toggle).show();
-          });
-          dropdown.addEventListener('mouseleave', function () {
-            const toggle = dropdown.querySelector('[data-bs-toggle="dropdown"]');
-            if (!toggle) return;
-            bootstrap.Dropdown.getOrCreateInstance(toggle).hide();
-          });
+      // elements
+      const openSearch = document.getElementById('openSearch');
+      const closeSearch = document.getElementById('closeSearch');
+      const searchDrawer = document.getElementById('searchDrawer');
+      const searchBox = document.getElementById('searchBox');
+
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = document.getElementById('themeIcon');
+
+      const openAI = document.getElementById('openAI');
+      const aiPopup = document.getElementById('aiPopup');
+      const aiClose = document.getElementById('aiClose');
+      const aiSend = document.getElementById('aiSend');
+      const aiInput = document.getElementById('aiInput');
+      const aiResponseArea = document.getElementById('aiResponseArea');
+      const aiInsertBtn = document.getElementById('aiInsertBtn');
+      const aiCopyBtn = document.getElementById('aiCopy');
+      const aiHeader = document.getElementById('aiHeader');
+
+      // pointer glow for dock
+      document.querySelectorAll('.pill-item').forEach(el => {
+        el.addEventListener('mousemove', (e) => {
+          const rect = el.getBoundingClientRect();
+          el.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+          el.style.setProperty('--my', `${e.clientY - rect.top}px`);
         });
-      }
-
-      // pause animations when tab inactive
-      document.addEventListener('visibilitychange', function () {
-        document.body.style.animationPlayState = document.hidden ? 'paused' : 'running';
       });
 
-      // lazy loading images
-      document.querySelectorAll('img:not([loading])').forEach((img) => img.setAttribute('loading', 'lazy'));
-
-      // AI popup functionality
-      const aiBtn = document.getElementById('ai-floating-btn');
-      const popup = document.getElementById('ai-popup');
-      const header = document.getElementById('ai-popup-header');
-      const closeBt = document.getElementById('ai-popup-close');
-      const sendBtn = document.getElementById('ai-send');
-      const input = document.getElementById('ai-input');
-      const outBox = document.getElementById('ai-response');
-      const insertBtn = document.getElementById('insert-ai-btn');
-      const resizer = document.getElementById('ai-popup-resizer');
-
-      function getCSRFToken() {
-        let cookieValue = null;
-        const cookies = document.cookie ? document.cookie.split(';') : [];
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, 10) === 'csrftoken=') {
-            cookieValue = decodeURIComponent(cookie.substring(10));
-            break;
-          }
-        }
-        return cookieValue;
-      }
-
-      if (aiBtn && popup) {
-        aiBtn.addEventListener('click', () => {
-          const isOpen = popup.style.display === 'flex';
-          if (isOpen) {
-            popup.style.display = 'none';
-            popup.setAttribute('aria-hidden', 'true');
-          } else {
-            popup.style.display = 'flex';
-            popup.style.flexDirection = 'column';
-            popup.setAttribute('aria-hidden', 'false');
-            setTimeout(() => {
-              try { outBox.parentElement.scrollTop = outBox.parentElement.scrollHeight; } catch (e) { }
-            }, 80);
-          }
+      // ripple effect
+      document.querySelectorAll('.ripple').forEach(el => {
+        el.addEventListener('click', function (e) {
+          const r = document.createElement('span');
+          r.className = 'r';
+          const rect = el.getBoundingClientRect();
+          const size = Math.max(rect.width, rect.height);
+          r.style.width = r.style.height = size + 'px';
+          r.style.left = (e.clientX - rect.left - size / 2) + 'px';
+          r.style.top = (e.clientY - rect.top - size / 2) + 'px';
+          el.appendChild(r);
+          setTimeout(() => r.remove(), 600);
         });
-      }
+      });
 
-      if (closeBt && popup) {
-        closeBt.addEventListener('click', () => {
-          popup.style.display = 'none';
-          popup.setAttribute('aria-hidden', 'true');
-        });
-      }
+      // search drawer open/close
+      function openSearchDrawer() { if (!searchDrawer) return; searchDrawer.classList.add('open'); searchDrawer.style.display = 'block'; searchDrawer.setAttribute('aria-hidden', 'false'); setTimeout(() => searchBox && searchBox.focus(), 90); }
+      function closeSearchDrawer() { if (!searchDrawer) return; searchDrawer.classList.remove('open'); searchDrawer.setAttribute('aria-hidden', 'true'); setTimeout(() => searchDrawer.style.display = 'none', 220); }
+      openSearch && openSearch.addEventListener('click', (e) => { e.preventDefault(); (searchDrawer.classList.contains('open') ? closeSearchDrawer() : openSearchDrawer()); });
+      closeSearch && closeSearch.addEventListener('click', closeSearchDrawer);
 
-      // sending request to your Django ai_assistant view
-      if (sendBtn && input && outBox) {
-        sendBtn.addEventListener('click', async () => {
-          const text = (input.value || '').trim();
-          if (!text) {
-            alert('Please type something for the AI.');
-            return;
-          }
+      // theme toggle
+      function updateThemeIcon() { const isLight = document.documentElement.classList.contains('light-mode'); themeIcon.className = isLight ? 'fa-solid fa-sun' : 'fa-solid fa-moon'; themeToggle.setAttribute('aria-pressed', isLight ? 'true' : 'false'); }
+      (function initTheme() { try { const saved = localStorage.getItem('theme') || 'auto'; if (saved === 'auto') { const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches; document.documentElement.classList.toggle('light-mode', prefersLight); } else { document.documentElement.classList.toggle('light-mode', saved === 'light'); } } catch (e) { } updateThemeIcon(); })();
+      themeToggle && themeToggle.addEventListener('click', function () { const nowLight = document.documentElement.classList.toggle('light-mode'); try { localStorage.setItem('theme', nowLight ? 'light' : 'dark'); } catch (e) { } updateThemeIcon(); showToast('Theme changed'); });
 
-          sendBtn.disabled = true;
-          sendBtn.innerText = 'Thinking...';
+      // AI popup open/close
+      function openAIPopup() { if (!aiPopup) return; aiPopup.classList.add('open'); aiPopup.setAttribute('aria-hidden', 'false'); setTimeout(() => aiInput && aiInput.focus(), 120); }
+      function closeAIPopup() { if (!aiPopup) return; aiPopup.classList.remove('open'); aiPopup.setAttribute('aria-hidden', 'true'); }
+      openAI && openAI.addEventListener('click', () => { const showing = aiPopup.classList.contains('open'); showing ? closeAIPopup() : openAIPopup(); });
+      aiClose && aiClose.addEventListener('click', closeAIPopup);
 
-          const bubble = document.createElement('div');
-          bubble.className = 'ai-bubble';
-          bubble.textContent = '…';
-          outBox.appendChild(bubble);
-          try {
-            try { outBox.parentElement.scrollTop = outBox.parentElement.scrollHeight; } catch (e) { }
-
-            const res = await fetch("https://my-new-blogs.onrender.com/ai-assistant/", {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken()
-              },
-              body: JSON.stringify({ text })
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'AI request failed');
-
-            bubble.innerHTML = data.suggestion || '✨ (No suggestion returned)';
-            try { if (window.hljs && hljs.highlightAll) hljs.highlightAll(); } catch (e) { }
-            if (insertBtn) insertBtn.style.display = 'block';
-          } catch (err) {
-            bubble.textContent = `⚠️ ${err.message}`;
-          } finally {
-            sendBtn.disabled = false;
-            sendBtn.innerText = 'Send';
-            input.value = '';
-            try { outBox.parentElement.scrollTop = outBox.parentElement.scrollHeight; } catch (e) { }
-          }
-        });
-
-        input.addEventListener('keydown', function (e) {
-          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-            sendBtn.click();
-          }
-        });
-      }
-
-      // Insert into editor: Quill -> #id_content -> clipboard -> prompt
-      if (insertBtn && outBox) {
-        insertBtn.addEventListener('click', function () {
-          const suggestionHtml = outBox.innerHTML || '';
-
-          function stripHtml(html) {
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            return doc.body.textContent || '';
-          }
-
-          const plain = stripHtml(suggestionHtml);
-
-          if (window.quill && typeof window.quill.insertText === 'function') {
-            try {
-              const q = window.quill;
-              const sel = q.getSelection && q.getSelection(true);
-              const index = (sel && sel.index) || q.getLength();
-              q.insertText(index, '\n' + plain + '\n', 'user');
-              q.setSelection(index + plain.length + 2, 0);
-              alert('Inserted into editor.');
-              return;
-            } catch (e) { }
-          }
-
-          const hidden = document.getElementById('id_content');
-          if (hidden) {
-            hidden.value = (hidden.value || '') + '\n' + plain + '\n';
-            alert('Inserted into blog content field.');
-            return;
-          }
-
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(plain).then(() => {
-              alert('Suggestion copied to clipboard. Paste it where you want (Ctrl+V).');
-            }).catch(() => {
-              alert('Could not copy to clipboard, please copy manually:\n\n' + plain);
-            });
-            return;
-          }
-
-          prompt('Copy the suggestion below:', plain);
-        });
-      }
-
-      // draggable popup by header
-      (function makeDraggable() {
-        const headerEl = document.getElementById('ai-popup-header');
-        const popupEl = document.getElementById('ai-popup');
+      // draggable AI popup
+      (function makeDraggable(headerEl, popupEl) {
         if (!headerEl || !popupEl) return;
-
-        let dragging = false, startX = 0, startY = 0, startRect = null;
-
-        function onDown(e) {
+        let dragging = false, startX = 0, startY = 0, origX = 0, origY = 0;
+        headerEl.addEventListener('mousedown', function (e) {
           if (e.button !== 0) return;
-          dragging = true;
-          startX = e.clientX;
-          startY = e.clientY;
-          startRect = popupEl.getBoundingClientRect();
-          popupEl.style.position = 'fixed';
-          popupEl.style.left = startRect.left + 'px';
-          popupEl.style.top = startRect.top + 'px';
-          popupEl.style.right = 'auto';
-          popupEl.style.bottom = 'auto';
-          document.addEventListener('mousemove', onMove);
-          document.addEventListener('mouseup', onUp);
-          e.preventDefault();
+          dragging = true; startX = e.clientX; startY = e.clientY;
+          const rect = popupEl.getBoundingClientRect(); origX = rect.left; origY = rect.top;
+          popupEl.style.right = 'auto'; popupEl.style.left = rect.left + 'px'; popupEl.style.top = rect.top + 'px'; popupEl.style.position = 'fixed';
+          document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+          headerEl.style.cursor = 'grabbing'; e.preventDefault();
+        });
+        function onMove(e) { if (!dragging) return; const dx = e.clientX - startX, dy = e.clientY - startY; popupEl.style.left = (origX + dx) + 'px'; popupEl.style.top = (origY + dy) + 'px'; }
+        function onUp() { dragging = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); headerEl.style.cursor = 'grab'; }
+      })(aiHeader, aiPopup);
+
+      // AI helpers (bubbles + typing)
+      function createBubble(text, role = 'ai', html = false) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'ai-bubble ' + (role === 'ai' ? 'ai' : 'user');
+
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        avatar.textContent = role === 'ai' ? 'AI' : (userName ? userName.charAt(0).toUpperCase() : 'U');
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+
+        const content = document.createElement('div');
+        content.className = 'content';
+        if (html) content.innerHTML = text; else content.textContent = text || '';
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+        const copyBtn = document.createElement('button'); copyBtn.className = 'bubble-copy'; copyBtn.title = 'Copy'; copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+        copyBtn.addEventListener('click', () => { copyText(content.innerText || content.textContent); });
+        actions.appendChild(copyBtn);
+
+        meta.appendChild(content);
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(meta);
+        wrapper.appendChild(actions);
+
+        aiResponseArea.appendChild(wrapper);
+        aiResponseArea.scrollTop = aiResponseArea.scrollHeight;
+        return { wrapper, content, copyBtn };
+      }
+
+      function attachTyping(bubble) {
+        const dots = document.createElement('div'); dots.className = 'typing-dots'; dots.innerHTML = '<span></span><span></span><span></span>'; bubble.appendChild(dots); return function remove() { dots.remove(); };
+      }
+
+      function copyText(txt) {
+        if (!txt) return showToast('Nothing to copy');
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(() => showToast('Copied'), () => prompt('Copy:', txt)); else prompt('Copy:', txt);
+      }
+
+      // send AI request (replace endpoint with yours)
+      aiSend && aiSend.addEventListener('click', async function () {
+        const text = (aiInput.value || '').trim();
+        if (!text) { showToast('Write a prompt'); aiInput.focus(); return; }
+
+        createBubble(text, 'user', false);
+
+        aiSend.disabled = true;
+        const { wrapper, content } = createBubble('', 'ai', false);
+        const removeTyping = attachTyping(wrapper);
+
+        try {
+          await new Promise(r => setTimeout(r, 350)); // small UX delay
+
+          const res = await fetch('/ai-assistant/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+            body: JSON.stringify({ text })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'AI request failed');
+
+          removeTyping();
+          const suggestion = data.suggestion || '✨ (No suggestion returned)';
+
+          if (/<\/?[a-z][\s\S]*>/i.test(suggestion)) {
+            content.innerHTML = suggestion;
+          } else {
+            content.textContent = '';
+            let i = 0; const speed = 14;
+            const t = setInterval(() => { content.textContent += suggestion.charAt(i); i++; if (i >= suggestion.length) clearInterval(t); }, speed);
+          }
+
+          try { if (window.hljs) content.querySelectorAll && content.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b)); } catch (e) { }
+
+          aiInsertBtn.style.display = 'inline-block'; aiCopyBtn.style.display = 'inline-block';
+        } catch (err) {
+          removeTyping(); content.textContent = '⚠️ ' + (err.message || 'Request failed');
+        } finally { aiSend.disabled = false; aiInput.value = ''; aiResponseArea.scrollTop = aiResponseArea.scrollHeight; }
+      });
+
+      // insert last AI suggestion into editors/textarea
+      aiInsertBtn && aiInsertBtn.addEventListener('click', function () {
+        const last = aiResponseArea.querySelector('.ai-bubble.ai .content:last-of-type');
+        const plain = last ? (last.innerText || last.textContent || '').trim() : '';
+        if (!plain) return showToast('No AI suggestion to insert');
+
+        // Quill
+        if (window.quill && typeof window.quill.insertText === 'function') {
+          try { const q = window.quill; const sel = q.getSelection && q.getSelection(true); const index = (sel && sel.index) || q.getLength(); q.insertText(index, '\n' + plain + '\n', 'user'); return showToast('Inserted into Quill'); } catch (e) { }
         }
 
-        function onMove(e) {
-          if (!dragging) return;
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          popupEl.style.left = (startRect.left + dx) + 'px';
-          popupEl.style.top = (startRect.top + dy) + 'px';
+        // TinyMCE
+        if (window.tinymce && tinymce.activeEditor) { try { tinymce.activeEditor.insertContent(plain); return showToast('Inserted into TinyMCE'); } catch (e) { } }
+
+        // CKEditor 4
+        if (window.CKEDITOR && CKEDITOR.instances) {
+          try { const ids = Object.keys(CKEDITOR.instances); if (ids.length) { CKEDITOR.instances[ids[0]].insertText(plain); return showToast('Inserted into CKEditor'); } } catch (e) { }
         }
 
-        function onUp() {
-          if (!dragging) return;
-          dragging = false;
-          document.removeEventListener('mousemove', onMove);
-          document.removeEventListener('mouseup', onUp);
+        // CKEditor 5
+        if (window.editor && window.editor.model && typeof window.editor.model.change === 'function') {
+          try { window.editor.model.change(writer => { const viewFragment = window.editor.data.processor.toView(plain); const modelFragment = window.editor.data.toModel(viewFragment); window.editor.model.insertContent(modelFragment); }); return showToast('Inserted into editor'); } catch (e) { }
         }
 
-        headerEl.addEventListener('mousedown', onDown);
-      })();
+        // fallback: textarea with id id_content
+        const hidden = document.getElementById('id_content');
+        if (hidden && (hidden.tagName === 'TEXTAREA' || hidden.tagName === 'INPUT')) { hidden.value = (hidden.value || '') + '\n' + plain + '\n'; return showToast('Inserted into content field'); }
 
-      // resizable
-      (function makeResizable() {
-        const resizerEl = document.getElementById('ai-popup-resizer');
-        const popupEl = document.getElementById('ai-popup');
-        if (!resizerEl || !popupEl) return;
+        // last fallback: clipboard
+        copyText(plain);
+      });
 
-        let resizing = false, sX = 0, sY = 0, sW = 0, sH = 0;
+      aiCopyBtn && aiCopyBtn.addEventListener('click', function () {
+        const last = aiResponseArea.querySelector('.ai-bubble.ai .content:last-of-type');
+        const plain = last ? (last.innerText || last.textContent).trim() : '';
+        if (!plain) return showToast('Nothing to copy'); copyText(plain);
+      });
 
-        function onDown(e) {
-          if (e.button !== 0) return;
-          resizing = true;
-          sX = e.clientX;
-          sY = e.clientY;
-          const r = popupEl.getBoundingClientRect();
-          sW = r.width;
-          sH = r.height;
-          document.addEventListener('mousemove', onMove);
-          document.addEventListener('mouseup', onUp);
-          e.preventDefault();
-        }
+      // submit with Ctrl/Cmd+Enter
+      aiInput && aiInput.addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); aiSend.click(); } });
 
-        function onMove(e) {
-          if (!resizing) return;
-          const dx = e.clientX - sX;
-          const dy = e.clientY - sY;
-          popupEl.style.width = Math.max(260, sW + dx) + 'px';
-          popupEl.style.height = Math.max(180, sH + dy) + 'px';
-        }
+      // ESC to close overlays
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { closeSearchDrawer(); closeAIPopup(); }
+        if (e.key === 'k' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); openSearchDrawer(); }
+      });
 
-        function onUp() {
-          if (!resizing) return;
-          resizing = false;
-          document.removeEventListener('mousemove', onMove);
-          document.removeEventListener('mouseup', onUp);
-        }
+      // close if clicked outside
+      document.addEventListener('click', function (e) {
+        try {
+          if (searchDrawer && searchDrawer.classList.contains('open') && !searchDrawer.contains(e.target) && !openSearch.contains(e.target)) closeSearchDrawer();
+          if (aiPopup && aiPopup.classList.contains('open') && !aiPopup.contains(e.target) && !openAI.contains(e.target)) closeAIPopup();
+        } catch (err) { }
+      });
 
-        resizerEl.addEventListener('mousedown', onDown);
-      })();
+      // lazy-load images
+      const lazyImgs = document.querySelectorAll('img.lazy');
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries, obs) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              img.src = img.dataset.src || img.getAttribute('data-src');
+              img.onload = () => img.classList.add('loaded');
+              obs.unobserve(img);
+            }
+          });
+        }, { rootMargin: '200px' });
+        lazyImgs.forEach(img => io.observe(img));
+      } else {
+        lazyImgs.forEach(img => { img.src = img.dataset.src || img.getAttribute('data-src'); img.onload = () => img.classList.add('loaded'); });
+      }
+
+      // subtle parallax background on scroll
+      window.addEventListener('scroll', function () { const s = window.scrollY || window.pageYOffset; const ratio = Math.min(1, s / 1200); document.body.style.backgroundPosition = `${ratio * 30}% 50%`; });
+
+      // first-time tip
+      try { if (!localStorage.getItem('theme_seen')) { showToast('Tip: Toggle theme (moon/sun) to switch dark/light mode'); localStorage.setItem('theme_seen', '1'); } } catch (e) { }
     });
   </script>
+
+  {% if request.resolver_match.url_name == 'home' %}
+  <script>
+    // tilt/parallax for content cards — runs only on homepage
+    document.querySelectorAll('.content-card, .card').forEach(card => {
+      let raf = null;
+      card.addEventListener('mousemove', (e) => {
+        const r = card.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width;
+        const py = (e.clientY - r.top) / r.height;
+        const rx = (py - .5) * -6;
+        const ry = (px - .5) * 6;
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          card.style.transform = `perspective(900px) translateZ(2px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px)`;
+        });
+      });
+      card.addEventListener('mouseleave', () => {
+        cancelAnimationFrame(raf);
+        card.style.transform = '';
+      });
+    });
+  </script>
+  {% endif %}
 </body>
 
 </html>
