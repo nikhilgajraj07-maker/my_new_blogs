@@ -573,6 +573,97 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3)
     }
 
+    /* ===== More menu overlay (desktop dropdown + mobile fullscreen) ===== */
+    #moreMenu {
+      display: none;
+      z-index: 1550;
+    }
+
+    #moreMenu.open {
+      display: block;
+    }
+
+    /* Desktop / tablet: dropdown beside the dock */
+    @media (min-width: 769px) {
+      #moreMenu {
+        position: fixed;
+        left: 90px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 240px;
+      }
+
+      #moreMenu .panel {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 10px;
+        box-shadow: var(--shadow-lg);
+      }
+    }
+
+    /* Mobile: full screen so all buttons are visible */
+    @media (max-width: 768px) {
+      #moreMenu {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(4px);
+      }
+
+      #moreMenu .panel {
+        position: absolute;
+        inset: 0;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 0;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #moreMenu .panel header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-weight: 700;
+      }
+    }
+
+    .more-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .more-link {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      text-decoration: none;
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+      transition: transform .12s, background .12s;
+    }
+
+    .more-link:hover {
+      transform: translateY(-2px);
+      background: var(--content-bg);
+    }
+
+    .more-close {
+      border: none;
+      background: transparent;
+      color: inherit;
+      font-size: 20px;
+      line-height: 1;
+      padding: 6px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
     /* reduced motion preference */
     @media (prefers-reduced-motion: reduce) {
       * {
@@ -595,6 +686,12 @@
 
     <button id="openSearch" class="pill-item ripple" data-tip="Search" aria-haspopup="dialog"
       aria-controls="searchDrawer" aria-label="Open search"><i class="fa-solid fa-magnifying-glass"></i></button>
+
+    <!-- NEW: More button (opens dropdown on desktop, fullscreen on mobile) -->
+    <button id="moreMenuBtn" class="pill-item ripple" data-tip="More" aria-label="More options" aria-haspopup="dialog"
+      aria-controls="moreMenu">
+      <i class="fa-solid fa-ellipsis"></i>
+    </button>
 
     <div style="height:6px; width:44px;"></div>
 
@@ -708,6 +805,21 @@
     </div>
   </div>
 
+  <!-- NEW: More menu overlay panel -->
+  <div id="moreMenu" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="moreTitle">
+    <div class="panel">
+      <header style="display:none" class="more-header">
+        <span id="moreTitle">More</span>
+        <button id="moreClose" class="more-close" aria-label="Close">✖</button>
+      </header>
+      <div class="more-actions">
+        <a class="more-link" href="{% url 'feedback' %}"><i class="fa-regular fa-message"></i> &nbsp; Feedback</a>
+        <a class="more-link" href="{% url 'contact' %}"><i class="fa-regular fa-envelope"></i> &nbsp; Contact Us</a>
+        <a class="more-link" href="{% url 'about' %}"><i class="fa-regular fa-circle-question"></i> &nbsp; About Us</a>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast holder -->
   <div id="cg_toast_holder" aria-hidden="true"></div>
 
@@ -765,6 +877,11 @@
       const aiInsertBtn = document.getElementById('aiInsertBtn');
       const aiCopyBtn = document.getElementById('aiCopy');
       const aiHeader = document.getElementById('aiHeader');
+
+      // NEW: More menu elements
+      const moreMenuBtn = document.getElementById('moreMenuBtn');
+      const moreMenu = document.getElementById('moreMenu');
+      const moreClose = document.getElementById('moreClose');
 
       // pointer glow for dock
       document.querySelectorAll('.pill-item').forEach(el => {
@@ -943,20 +1060,39 @@
         if (!plain) return showToast('Nothing to copy'); copyText(plain);
       });
 
-      // submit with Ctrl/Cmd+Enter
-      aiInput && aiInput.addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); aiSend.click(); } });
+      // NEW: More menu open/close handlers
+      function openMore() {
+        if (!moreMenu) return;
+        moreMenu.classList.add('open');
+        moreMenu.setAttribute('aria-hidden', 'false');
+        // show mobile header only on small screens
+        if (window.innerWidth <= 768) {
+          const header = moreMenu.querySelector('.more-header');
+          if (header) header.style.display = 'flex';
+        }
+        // focus first link
+        const firstLink = moreMenu.querySelector('.more-link');
+        setTimeout(() => firstLink && firstLink.focus(), 60);
+      }
+      function closeMore() {
+        if (!moreMenu) return;
+        moreMenu.classList.remove('open');
+        moreMenu.setAttribute('aria-hidden', 'true');
+      }
 
-      // ESC to close overlays
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') { closeSearchDrawer(); closeAIPopup(); }
-        if (e.key === 'k' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); openSearchDrawer(); }
+      moreMenuBtn && moreMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        moreMenu.classList.contains('open') ? closeMore() : openMore();
       });
 
-      // close if clicked outside
+      moreClose && moreClose.addEventListener('click', (e) => { e.stopPropagation(); closeMore(); });
+
+      // close overlays when clicking outside
       document.addEventListener('click', function (e) {
         try {
           if (searchDrawer && searchDrawer.classList.contains('open') && !searchDrawer.contains(e.target) && !openSearch.contains(e.target)) closeSearchDrawer();
           if (aiPopup && aiPopup.classList.contains('open') && !aiPopup.contains(e.target) && !openAI.contains(e.target)) closeAIPopup();
+          if (moreMenu && moreMenu.classList.contains('open') && !moreMenu.contains(e.target) && !moreMenuBtn.contains(e.target)) closeMore();
         } catch (err) { }
       });
 
@@ -983,30 +1119,41 @@
 
       // first-time tip
       try { if (!localStorage.getItem('theme_seen')) { showToast('Tip: Toggle theme (moon/sun) to switch dark/light mode'); localStorage.setItem('theme_seen', '1'); } } catch (e) { }
+
+      // ESC to close overlays
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { closeSearchDrawer(); closeAIPopup(); closeMore(); }
+        if (e.key === 'k' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); openSearchDrawer(); }
+      });
     });
   </script>
 
   {% if request.resolver_match.url_name == 'home' %}
   <script>
-    // tilt/parallax for content cards — runs only on homepage
-    document.querySelectorAll('.content-card, .card').forEach(card => {
-      let raf = null;
-      card.addEventListener('mousemove', (e) => {
-        const r = card.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width;
-        const py = (e.clientY - r.top) / r.height;
-        const rx = (py - .5) * -6;
-        const ry = (px - .5) * 6;
-        cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => {
-          card.style.transform = `perspective(900px) translateZ(2px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px)`;
-        });
+    // tilt/parallax for content cards — DESKTOP ONLY (fine pointer + min width)
+    (function () {
+      const desktop = window.matchMedia ? window.matchMedia('(pointer: fine)').matches : (window.innerWidth > 768);
+      if (!desktop || window.innerWidth <= 768) return;
+
+      document.querySelectorAll('.content-card, .card').forEach(card => {
+        let raf = null;
+        const onMove = (e) => {
+          const r = card.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width;
+          const py = (e.clientY - r.top) / r.height;
+          const rx = (py - .5) * -6;
+          const ry = (px - .5) * 6;
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(() => {
+            card.style.transform = `perspective(900px) translateZ(2px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px)`;
+          });
+        };
+        const onLeave = () => { cancelAnimationFrame(raf); card.style.transform = ''; };
+
+        card.addEventListener('mousemove', onMove);
+        card.addEventListener('mouseleave', onLeave);
       });
-      card.addEventListener('mouseleave', () => {
-        cancelAnimationFrame(raf);
-        card.style.transform = '';
-      });
-    });
+    })();
   </script>
   {% endif %}
 </body>

@@ -7,121 +7,425 @@
 <!-- PAGE-SPECIFIC STYLES (compact) -->
 <style>
   /* HERO */
-  .hero-wrap { padding:3.25rem 0; }
-  .hero-inner { display:flex; gap:2rem; align-items:center; justify-content:space-between; flex-wrap:wrap; }
-  .hero-left { flex:1 1 560px; min-width:260px; }
-  .hero-title { font-weight:800; font-size:2.4rem; line-height:1.02; margin:0 0 .5rem; }
-  .hero-sub { color:var(--muted, rgba(255,255,255,0.65)); margin-bottom:1.25rem; font-size:1.05rem; }
+  .hero-wrap {
+    padding: 3.25rem 0;
+  }
+
+  .hero-inner {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .hero-left {
+    flex: 1 1 560px;
+    min-width: 260px;
+  }
+
+  .hero-title {
+    font-weight: 800;
+    font-size: 2.4rem;
+    line-height: 1.02;
+    margin: 0 0 .5rem;
+  }
+
+  .hero-sub {
+    color: var(--muted, rgba(255, 255, 255, 0.65));
+    margin-bottom: 1.25rem;
+    font-size: 1.05rem;
+  }
 
   .gradient-txt {
     background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    display:inline-block;
+    display: inline-block;
   }
 
-  .hero-ctas { display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; }
+  .hero-ctas {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
   .cta-primary {
-    background: linear-gradient(90deg,var(--accent-a),var(--accent-b));
-    color:#fff;
-    border-radius:12px;
-    padding:.6rem 1.1rem;
-    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+    color: #fff;
+    border-radius: 12px;
+    padding: .6rem 1.1rem;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .18);
     border: none;
     cursor: pointer;
-    font-weight:700;
+    font-weight: 700;
     transition: transform .18s ease, box-shadow .18s ease;
   }
-  .cta-primary:hover, .cta-primary:focus { transform: translateY(-4px); box-shadow: 0 22px 50px rgba(0,0,0,.28); outline: none; }
+
+  .cta-primary:hover,
+  .cta-primary:focus {
+    transform: translateY(-4px);
+    box-shadow: 0 22px 50px rgba(0, 0, 0, .28);
+    outline: none;
+  }
 
   .cta-ghost {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     color: var(--text);
-    border-radius:12px;
-    padding:.55rem .95rem;
+    border-radius: 12px;
+    padding: .55rem .95rem;
     cursor: pointer;
     transition: transform .18s, box-shadow .18s;
   }
-  .cta-ghost:hover, .cta-ghost:focus { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,.14); outline: none; }
 
-  /* AI card */
-  .ai-hero-card {
-    width:320px;
-    max-width:100%;
-    background: var(--glass-bg);
-    border:1px solid var(--glass-border);
-    border-radius:14px;
-    padding:1rem;
-    box-shadow: 0 12px 40px rgba(0,0,0,.16);
+  .cta-ghost:hover,
+  .cta-ghost:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .14);
+    outline: none;
   }
-  .ai-hero-title { font-weight:700; margin:0 0 .25rem; }
-  .ai-hero-body { color:var(--muted); font-size:.95rem; margin-bottom:.8rem; }
 
-  .ai-hero-actions { display:flex; gap:.5rem; }
-  .ai-small { flex:1; padding:.45rem .65rem; border-radius:10px; border:none; cursor:pointer; font-weight:700; }
-  .ai-ask { background: linear-gradient(90deg,var(--accent-a),var(--accent-b)); color:#fff; }
-  .ai-browse { background:transparent; border:1px solid var(--glass-border); color:var(--text); }
+  /* AI card (boss level) */
+  .ai-hero-card {
+    width: 340px;
+    max-width: 100%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 18px;
+    padding: 1.2rem;
+    backdrop-filter: blur(16px) saturate(180%);
+    box-shadow: 0 12px 50px rgba(0, 0, 0, .35);
+    position: relative;
+    overflow: hidden;
+    animation: floaty 6s ease-in-out infinite;
+  }
 
-  /* Carousel tweaks */
-  .carousel-inner .carousel-item img { transition: transform .6s ease; }
-  .carousel-inner .carousel-item:hover img { transform: scale(1.04); }
+  .ai-hero-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(120deg, var(--accent-a), var(--accent-b), var(--accent-a));
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: gradientMove 6s linear infinite;
+    pointer-events: none;
+  }
 
-  .carousel-caption { bottom: 24px; left: 24px; right: auto; text-align: left; max-width:60%; }
-  .carousel-caption h5 { font-weight:800; margin-bottom:.4rem; }
-  .carousel-caption p { margin-bottom:.6rem; color: rgba(255,255,255,0.9); }
-  .carousel-caption .meta { display:block; font-size:.85rem; opacity:.9; margin-bottom:.45rem; }
+  @keyframes gradientMove {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes floaty {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
+  .ai-hero-title {
+    font-weight: 700;
+    margin: 0 0 .25rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ai-hero-body {
+    color: var(--muted);
+    font-size: .95rem;
+    margin-bottom: .8rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ai-hero-actions {
+    display: flex;
+    gap: .5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ai-small {
+    flex: 1;
+    padding: .45rem .65rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .ai-ask {
+    background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+    color: #fff;
+  }
+
+  .ai-browse {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text);
+  }
+
+  /* Carousel tweaks & "boss" image style */
+  .carousel-inner .carousel-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+  }
+
+  /* Responsive image height using clamp so mobile fits */
+  .carousel-inner .carousel-item img {
+    width: 100%;
+    height: clamp(260px, 40vh, 420px);
+    object-fit: cover;
+    transform-origin: center center;
+    transition: transform .6s ease, filter .25s ease;
+    display: block;
+    -webkit-user-drag: none;
+  }
+
+  .carousel-inner .carousel-item:hover img {
+    transform: scale(1.04);
+  }
+
+  /* subtle overlay for modern look */
+  .carousel-inner .carousel-item::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.35));
+    pointer-events: none;
+  }
+
+  .carousel-caption {
+    bottom: 16px;
+    left: 12px;
+    right: 12px;
+    max-width: 100%;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.48), rgba(0, 0, 0, 0.28));
+    border-radius: 10px;
+    color: #fff;
+    box-shadow: 0 8px 30px rgba(2, 6, 23, 0.45);
+  }
+
+  .carousel-caption h5 {
+    font-weight: 800;
+    margin-bottom: .4rem;
+  }
+
+  .carousel-caption p {
+    margin-bottom: .6rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .carousel-caption .meta {
+    display: block;
+    font-size: .85rem;
+    opacity: .95;
+    margin-bottom: .45rem;
+  }
+
+  @media (max-width: 768px) {
+    .carousel-caption h5 {
+      font-size: 1.05rem;
+    }
+
+    .carousel-caption p {
+      font-size: 0.95rem;
+    }
+
+    .ai-hero-card {
+      width: 320px;
+    }
+  }
 
   /* Featured grid & cards */
-  .section-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:1rem; }
-  .section-title { font-weight:800; font-size:1.35rem; margin:0; }
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 1rem;
+  }
 
-  .boss-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; }
-  @media (max-width: 992px){ .boss-grid { grid-template-columns:repeat(2,1fr); } }
-  @media (max-width: 640px){ .boss-grid { grid-template-columns:1fr; } }
+  .section-title {
+    font-weight: 800;
+    font-size: 1.35rem;
+    margin: 0;
+  }
+
+  .boss-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  @media (max-width: 992px) {
+    .boss-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .boss-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 
   .boss-card {
     background: var(--glass-bg);
-    border-radius:14px;
-    overflow:hidden;
-    border:1px solid var(--glass-border);
-    display:flex;
-    flex-direction:column;
-    min-height:320px;
-    transition: transform .36s cubic-bezier(.18,.8,.32,1), box-shadow .36s, border-color .3s;
-    position:relative;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    min-height: 320px;
+    transition: transform .36s cubic-bezier(.18, .8, .32, 1), box-shadow .36s, border-color .3s;
+    position: relative;
   }
 
-  .boss-card:hover{
+  .boss-card:hover {
     transform: translateY(-10px) scale(1.01);
-    box-shadow: 0 30px 90px rgba(2,6,23,0.45);
+    box-shadow: 0 30px 90px rgba(2, 6, 23, 0.45);
     border-color: color-mix(in oklab, var(--accent-a) 35%, transparent);
   }
 
-  .boss-card .card-media { width:100%; height:200px; background:#111; display:block; object-fit:cover; }
-  .boss-card .card-body { padding:1rem 1rem 1.2rem; display:flex; flex-direction:column; gap:.5rem; }
-  .boss-card .card-title { margin:0; font-weight:700; font-size:1.05rem; }
-  .boss-card .card-excerpt { color:var(--muted); font-size:.95rem; flex:1; }
-  .author-meta { font-size:.9rem; color:var(--muted); font-style:italic; margin-top:0.15rem; }
+  .boss-card .card-media {
+    width: 100%;
+    height: 200px;
+    background: #111;
+    display: block;
+    object-fit: cover;
+    transition: transform .6s ease, filter .25s ease;
+  }
+
+  .boss-card .card-media:hover {
+    transform: scale(1.03);
+  }
+
+  /* lazy reveal for boss images */
+  img.boss-lazy {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .45s ease, transform .45s ease;
+  }
+
+  img.boss-lazy.loaded {
+    opacity: 1;
+    transform: none;
+  }
+
+  .boss-card .card-body {
+    padding: 1rem 1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  .boss-card .card-title {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+
+  .boss-card .card-excerpt {
+    color: var(--muted);
+    font-size: .95rem;
+    flex: 1;
+  }
+
+  .author-meta {
+    font-size: .9rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 0.15rem;
+  }
 
   .read-btn {
-    margin-top:.6rem; align-self:flex-start; border-radius:10px; padding:.45rem .8rem; border:none;
-    background: linear-gradient(90deg,var(--accent-a),var(--accent-b)); color:#fff; cursor:pointer; font-weight:700;
+    margin-top: .6rem;
+    align-self: flex-start;
+    border-radius: 10px;
+    padding: .45rem .8rem;
+    border: none;
+    background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+    color: #fff;
+    cursor: pointer;
+    font-weight: 700;
     transition: transform .18s, box-shadow .18s;
   }
-  .read-btn:focus, .read-btn:hover { transform: translateY(-3px); box-shadow:0 14px 40px rgba(0,0,0,.28); outline:none; }
 
-  /* small helpers */
-  .muted { color:var(--muted); }
-  .ripple { position:relative; overflow:hidden; }
-  .ripple .r { position:absolute; border-radius:50%; transform:scale(0); opacity:.28; background: linear-gradient(90deg,var(--accent-a),var(--accent-b)); animation:rippleAnim .6s linear; pointer-events:none; }
-  @keyframes rippleAnim { to { transform:scale(4); opacity:0; } }
-
-  @media (prefers-reduced-motion: reduce) {
-    .boss-card, .cta-primary, .read-btn { transition:none; transform:none !important; }
+  .read-btn:focus,
+  .read-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, .28);
+    outline: none;
   }
 
-  .focus-ring:focus { outline: 3px solid color-mix(in oklab,var(--accent-a) 30%, transparent); border-radius:10px; }
+  .muted {
+    color: var(--muted);
+  }
+
+  .ripple {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ripple .r {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    opacity: .28;
+    background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+    animation: rippleAnim .6s linear;
+    pointer-events: none;
+  }
+
+  @keyframes rippleAnim {
+    to {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+
+    .boss-card,
+    .cta-primary,
+    .read-btn {
+      transition: none;
+      transform: none !important;
+    }
+
+    .ai-hero-card {
+      animation: none;
+    }
+  }
+
+  .focus-ring:focus {
+    outline: 3px solid color-mix(in oklab, var(--accent-a) 30%, transparent);
+    border-radius: 10px;
+  }
 </style>
 
 <!-- HERO -->
@@ -132,20 +436,16 @@
       <p class="hero-sub">Curated articles, beautiful design, and tools to help you write better.</p>
 
       <div class="hero-ctas">
-        <button class="cta-primary ripple" role="link" aria-label="Explore Blogs" onclick="location.href='{% url 'all_blogs' %}'">
-          Explore Blogs
-        </button>
-
-        <button class="cta-ghost focus-ring" role="button" aria-label="Create new blog" onclick="location.href='{% url 'blog' %}'">
-          Create
-        </button>
+        <button class="cta-primary ripple" role="link" aria-label="Explore Blogs"
+          onclick="location.href='{% url 'all_blogs' %}'">Explore Blogs</button>
+        <button class="cta-ghost focus-ring" role="button" aria-label="Create new blog"
+          onclick="location.href='{% url 'blog' %}'">Create</button>
       </div>
     </div>
 
     <div class="ai-hero-card" aria-hidden="false" role="region" aria-label="AI Assistant quick card">
       <div class="ai-hero-title"><i class="fa-solid fa-robot me-2"></i>AI Assistant</div>
       <div class="ai-hero-body">Ask for outlines, ideas, or editing help — right from your site.</div>
-
       <div class="ai-hero-actions">
         <button class="ai-small ai-ask ripple" id="heroAskAI" aria-label="Ask AI (open assistant)">Ask AI</button>
         <a class="ai-small ai-browse" href="{% url 'all_blogs' %}" aria-label="Browse blogs">Browse</a>
@@ -156,13 +456,16 @@
 
 <!-- CAROUSEL -->
 <section class="container mb-5">
-  {% with slides=blogs|slice:":3" %}
+  {% with slides=blogs|slice:":6" %}
   {% if slides %}
-  <div id="blogCarousel" class="carousel slide carousel-fade rounded-4 shadow-lg" data-bs-ride="carousel" data-bs-interval="5000" aria-label="Featured posts carousel">
+  <div id="blogCarousel" class="carousel slide carousel-fade rounded-4 shadow-lg" data-bs-ride="carousel"
+    data-bs-interval="5000" aria-label="Featured posts carousel">
     <!-- indicators -->
     <div class="carousel-indicators">
       {% for s in slides %}
-        <button type="button" data-bs-target="#blogCarousel" data-bs-slide-to="{{ forloop.counter0 }}" class="{% if forloop.first %}active{% endif %}" aria-current="{% if forloop.first %}true{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+      <button type="button" data-bs-target="#blogCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
+        class="{% if forloop.first %}active{% endif %}" aria-current="{% if forloop.first %}true{% endif %}"
+        aria-label="Slide {{ forloop.counter }}"></button>
       {% endfor %}
     </div>
 
@@ -170,28 +473,33 @@
       {% for s in slides %}
       <div class="carousel-item {% if forloop.first %}active{% endif %}">
         {% if s.image %}
-          <img src="{{ s.image.url }}" class="d-block w-100" alt="{{ s.title|escape }}" style="height:420px;object-fit:cover;">
+        <img src="{{ s.image.url }}" class="d-block w-100" alt="{{ s.title|escape }}"
+          style="height:420px;object-fit:cover;">
         {% else %}
-          <div class="d-flex align-items-center justify-content-center bg-secondary text-white" style="height:420px;">
-            <span>No Image</span>
-          </div>
+        <div class="d-flex align-items-center justify-content-center bg-secondary text-white" style="height:420px;">
+          <span>No Image</span>
+        </div>
         {% endif %}
-        <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded-3 p-3">
+        <div class="carousel-caption">
           <h5 class="fw-bold">{{ s.title }}</h5>
           <p class="mb-1">{{ s.content|truncatewords:18 }}</p>
           <span class="meta">By {{ s.author.get_full_name|default:s.author.username|escape }}</span>
           <br>
-          <a href="{% url 'blog_detail' s.id %}" class="btn btn-sm mt-2" style="background:linear-gradient(90deg,var(--accent-a),var(--accent-b));color:#fff;border-radius:8px;">Read More</a>
+          <a href="{% url 'blog_detail' s.id %}" class="btn btn-sm mt-2"
+            style="background:linear-gradient(90deg,var(--accent-a),var(--accent-b));color:#fff;border-radius:8px;">Read
+            More</a>
         </div>
       </div>
       {% endfor %}
     </div>
 
-    <button class="carousel-control-prev" type="button" data-bs-target="#blogCarousel" data-bs-slide="prev" aria-label="Previous slide">
+    <button class="carousel-control-prev" type="button" data-bs-target="#blogCarousel" data-bs-slide="prev"
+      aria-label="Previous slide">
       <span class="carousel-control-prev-icon" aria-hidden="true"></span>
       <span class="visually-hidden">Previous</span>
     </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#blogCarousel" data-bs-slide="next" aria-label="Next slide">
+    <button class="carousel-control-next" type="button" data-bs-target="#blogCarousel" data-bs-slide="next"
+      aria-label="Next slide">
       <span class="carousel-control-next-icon" aria-hidden="true"></span>
       <span class="visually-hidden">Next</span>
     </button>
@@ -210,11 +518,13 @@
     {% for blog in blogs %}
     <article class="boss-card" tabindex="0" role="article" aria-labelledby="btitle-{{ forloop.counter }}">
       {% if blog.image %}
-        <img class="card-media boss-lazy" data-src="{{ blog.image.url }}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="{{ blog.title|escape }}" />
+      <img class="card-media boss-lazy" data-src="{{ blog.image.url }}"
+        src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="{{ blog.title|escape }}" />
       {% else %}
-        <div class="card-media d-flex align-items-center justify-content-center" style="background:linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.06));color:var(--muted);font-weight:600;">
-          No image
-        </div>
+      <div class="card-media d-flex align-items-center justify-content-center"
+        style="background:linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.06));color:var(--muted);font-weight:600;">
+        No image
+      </div>
       {% endif %}
 
       <div class="card-body">
@@ -223,13 +533,14 @@
         <div class="author-meta">By {{ blog.author.get_full_name|default:blog.author.username|escape }}</div>
 
         <div style="display:flex;gap:.5rem;align-items:center;">
-          <a href="{% url 'blog_detail' blog.id %}" class="read-btn ripple" aria-label="Read more about {{ blog.title|escape }}">Read More</a>
+          <a href="{% url 'blog_detail' blog.id %}" class="read-btn ripple"
+            aria-label="Read more about {{ blog.title|escape }}">Read More</a>
           <span class="muted" style="font-size:.85rem;margin-left:auto;">{{ blog.created_at|date:"M j, Y" }}</span>
         </div>
       </div>
     </article>
     {% empty %}
-      <p class="muted">No blogs yet — check back soon.</p>
+    <p class="muted">No blogs yet — check back soon.</p>
     {% endfor %}
   </div>
 </section>
@@ -238,20 +549,20 @@
 <script>
   (function () {
     // refresh AOS (base may have initialized it already)
-    try { if (window.AOS) AOS.refresh(); } catch (e) {}
+    try { if (window.AOS) AOS.refresh(); } catch (e) { }
 
     // Ripple effect
-    document.querySelectorAll('.ripple').forEach(el=>{
-      el.addEventListener('click', function(e){
+    document.querySelectorAll('.ripple').forEach(el => {
+      el.addEventListener('click', function (e) {
         const r = document.createElement('span');
         r.className = 'r';
         const rect = el.getBoundingClientRect();
         const size = Math.max(rect.width, rect.height);
         r.style.width = r.style.height = size + 'px';
-        r.style.left = (e.clientX - rect.left - size/2) + 'px';
-        r.style.top = (e.clientY - rect.top - size/2) + 'px';
+        r.style.left = (e.clientX - rect.left - size / 2) + 'px';
+        r.style.top = (e.clientY - rect.top - size / 2) + 'px';
         el.appendChild(r);
-        setTimeout(()=> r.remove(), 600);
+        setTimeout(() => r.remove(), 600);
       });
     });
 
@@ -270,46 +581,51 @@
       }, { rootMargin: '200px' });
       lazyImgs.forEach(i => io.observe(i));
     } else {
-      lazyImgs.forEach(img => { img.src = img.dataset.src || img.getAttribute('data-src'); img.onload = ()=> img.classList.add('loaded'); });
+      lazyImgs.forEach(img => { img.src = img.dataset.src || img.getAttribute('data-src'); img.onload = () => img.classList.add('loaded'); });
     }
 
-    // Card tilt (subtle)
-    document.querySelectorAll('.boss-card').forEach(card=>{
-      let raf = null;
-      const handle = (e) => {
-        const r = card.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width;
-        const py = (e.clientY - r.top) / r.height;
-        const rx = (py - .5) * -6;
-        const ry = (px - .5) * 6;
-        cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(()=> {
-          card.style.transform = `perspective(900px) translateZ(2px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px)`;
-        });
-      };
-      card.addEventListener('mousemove', handle);
-      card.addEventListener('mouseleave', ()=> { cancelAnimationFrame(raf); card.style.transform = ''; });
-      card.addEventListener('focus', ()=> card.style.transform = 'translateY(-8px)');
-      card.addEventListener('blur', ()=> card.style.transform = '');
-    });
+    // Card tilt (subtle) - desktop only (pointer: fine and width > 768)
+    (function () {
+      const isFinePointer = window.matchMedia ? window.matchMedia('(pointer: fine)').matches : true;
+      if (!isFinePointer || window.innerWidth <= 768) return;
+
+      document.querySelectorAll('.boss-card').forEach(card => {
+        let raf = null;
+        const handle = (e) => {
+          const r = card.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width;
+          const py = (e.clientY - r.top) / r.height;
+          const rx = (py - .5) * -6;
+          const ry = (px - .5) * 6;
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(() => {
+            card.style.transform = `perspective(900px) translateZ(2px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px)`;
+          });
+        };
+        card.addEventListener('mousemove', handle);
+        card.addEventListener('mouseleave', () => { cancelAnimationFrame(raf); card.style.transform = ''; });
+        card.addEventListener('focus', () => card.style.transform = 'translateY(-8px)');
+        card.addEventListener('blur', () => card.style.transform = '');
+      });
+    })();
 
     // Hook hero ask AI to open assistant in base (fallback to clicking sidebar)
     const heroAsk = document.getElementById('heroAskAI');
     if (heroAsk) {
-      heroAsk.addEventListener('click', function(e){
+      heroAsk.addEventListener('click', function (e) {
         e.preventDefault();
         try {
           if (typeof openAIPopup === 'function') return openAIPopup();
-        } catch(_) {}
+        } catch (_) { }
         const sidebar = document.getElementById('openAI');
         if (sidebar) sidebar.click();
       });
-      heroAsk.addEventListener('keydown', function(e){
+      heroAsk.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); heroAsk.click(); }
       });
     }
 
-    // Bootstrap carousel: ensure it autoplays and pauses on hover
+    // Bootstrap carousel: ensure it autoplays and pauses on hover/focus
     try {
       const carouselEl = document.getElementById('blogCarousel');
       if (carouselEl && window.bootstrap && bootstrap.Carousel) {
@@ -318,7 +634,7 @@
         carouselEl.addEventListener('focusin', () => carousel.pause());
         carouselEl.addEventListener('focusout', () => carousel.cycle());
       }
-    } catch(e){ console.warn(e); }
+    } catch (e) { console.warn(e); }
 
     // Keyboard: Enter on card opens Read More
     document.querySelectorAll('.boss-card').forEach(c => {
@@ -328,6 +644,21 @@
           if (link) link.click();
         }
       });
+    });
+
+    // Make sure carousel images are accessible on small screens: on small screens, shorten interval slightly (optional)
+    window.addEventListener('resize', function () {
+      try {
+        const carouselEl = document.getElementById('blogCarousel');
+        if (carouselEl && window.bootstrap && bootstrap.Carousel) {
+          const instance = bootstrap.Carousel.getInstance(carouselEl);
+          if (instance) {
+            // smaller interval on mobile for quicker browsing
+            if (window.innerWidth <= 640) instance._config.interval = 4000;
+            else instance._config.interval = 5000;
+          }
+        }
+      } catch (e) { }
     });
 
   })();
