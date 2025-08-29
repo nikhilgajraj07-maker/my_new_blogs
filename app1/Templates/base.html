@@ -149,7 +149,11 @@
       border-radius: 8px
     }
 
-    /* ===== Pill Dock ===== */
+    /* ===== Pill Dock =====
+       Updated to behave correctly on mobile:
+       - Desktop: left vertical dock (same as before)
+       - Mobile: centered bottom dock with large tappable targets + safe-area handling
+    */
     .pill-dock {
       position: fixed;
       left: 18px;
@@ -167,6 +171,8 @@
       backdrop-filter: blur(14px) saturate(120%);
       box-shadow: var(--shadow-lg);
       z-index: 1400;
+      transition: all .22s ease;
+      touch-action: manipulation;
     }
 
     .pill-item {
@@ -182,6 +188,12 @@
       position: relative;
       overflow: hidden;
       transition: transform .18s, box-shadow .18s;
+      flex-shrink: 0;
+    }
+
+    .pill-item i {
+      font-size: 18px;
+      line-height: 1;
     }
 
     .pill-item:hover {
@@ -209,6 +221,7 @@
       opacity: 0;
       pointer-events: none;
       transition: all .18s;
+      z-index: 1450;
     }
 
     .pill-item[data-tip]:hover::after {
@@ -216,21 +229,47 @@
       transform: translateY(-50%) translateX(0)
     }
 
-    @media(max-width:768px) {
+    /* ===== Mobile behavior for pill dock ===== */
+    @media (max-width: 768px) {
       .pill-dock {
+        /* center bottom, respect safe-area on iOS */
         left: 50%;
-        bottom: 16px;
         top: auto;
+        bottom: calc(12px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
         flex-direction: row;
-        width: auto;
-        padding: 8px
+        width: calc(100% - 32px); /* provide gutter on each side */
+        max-width: 980px;
+        padding: 10px;
+        gap: 8px;
+        border-radius: 20px;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 18px 50px rgba(2,6,23,0.45);
+        background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+        border: 1px solid rgba(255,255,255,0.04);
       }
 
+      /* make tap targets larger and inline */
+      .pill-item {
+        width: auto;
+        height: 48px;
+        min-width: 48px;
+        padding: 0 12px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 16px;
+        background: transparent;
+      }
+
+      .pill-item i { font-size: 18px; }
+
+      /* Hide tooltips on touch to avoid overflow */
       .pill-item[data-tip]::after {
-        left: 50%;
-        top: -48px;
-        transform: translate(-50%, -6px)
+        display: none;
       }
     }
 
@@ -1048,7 +1087,7 @@
 
         // fallback: textarea with id id_content
         const hidden = document.getElementById('id_content');
-        if (hidden && (hidden.tagName === 'TEXTAREA' || hidden.tagName === 'INPUT')) { hidden.value = (hidden.value || '') + '\n' + plain + '\n'; return showToast('Inserted into content field'); }
+        if (hidden && (hidden.tagName === 'TEXTAREA' || hidden.TAGNAME === 'INPUT')) { hidden.value = (hidden.value || '') + '\n' + plain + '\n'; return showToast('Inserted into content field'); }
 
         // last fallback: clipboard
         copyText(plain);
@@ -1128,7 +1167,7 @@
     });
   </script>
 
-  {% if request.resolver_match.url_name == 'home' %}
+  {% if request.resolver_match.url_name == 'single_blog' %}
   <script>
     // tilt/parallax for content cards — DESKTOP ONLY (fine pointer + min width)
     (function () {
