@@ -229,7 +229,7 @@
       transform: translateY(-50%) translateX(0)
     }
 
-    /* ===== Mobile behavior for pill dock ===== */
+    /* ===== Mobile behavior for pill dock (kept, but we'll hide it with a stronger rule below) ===== */
     @media (max-width: 768px) {
       .pill-dock {
         /* center bottom, respect safe-area on iOS */
@@ -238,16 +238,17 @@
         bottom: calc(12px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
         flex-direction: row;
-        width: calc(100% - 32px); /* provide gutter on each side */
+        width: calc(100% - 32px);
+        /* provide gutter on each side */
         max-width: 980px;
         padding: 10px;
         gap: 8px;
         border-radius: 20px;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 18px 50px rgba(2,6,23,0.45);
-        background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-        border: 1px solid rgba(255,255,255,0.04);
+        box-shadow: 0 18px 50px rgba(2, 6, 23, 0.45);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+        border: 1px solid rgba(255, 255, 255, 0.04);
       }
 
       /* make tap targets larger and inline */
@@ -265,7 +266,9 @@
         background: transparent;
       }
 
-      .pill-item i { font-size: 18px; }
+      .pill-item i {
+        font-size: 18px;
+      }
 
       /* Hide tooltips on touch to avoid overflow */
       .pill-item[data-tip]::after {
@@ -710,6 +713,71 @@
         transition: none !important
       }
     }
+
+    /* ==========================
+       MOBILE RADIAL FAB MENU
+       (added without renaming existing classes)
+       ========================== */
+    .fab-menu {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 1600;
+      display: none;
+    }
+
+    .fab-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, .35);
+      cursor: pointer;
+      transition: transform .3s ease, opacity .3s ease;
+    }
+
+    .fab-btn.main {
+      z-index: 2;
+    }
+
+    .fab-actions {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      pointer-events: none;
+    }
+
+    .fab-actions .fab-btn {
+      position: absolute;
+      opacity: 0;
+      transform: translate(0, 0) scale(0.5);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .fab-menu.open .fab-actions {
+      pointer-events: auto;
+    }
+
+    .fab-menu.open .fab-actions .fab-btn {
+      opacity: 1;
+    }
+
+    /* Hide the dock on small screens, show FAB instead (non-destructive override) */
+    @media (max-width: 768px) {
+      .pill-dock {
+        display: none !important;
+      }
+
+      .fab-menu {
+        display: block;
+      }
+    }
   </style>
 </head>
 
@@ -856,6 +924,24 @@
         <a class="more-link" href="{% url 'contact' %}"><i class="fa-regular fa-envelope"></i> &nbsp; Contact Us</a>
         <a class="more-link" href="{% url 'about' %}"><i class="fa-regular fa-circle-question"></i> &nbsp; About Us</a>
       </div>
+    </div>
+  </div>
+
+  <!-- ================= FLOATING RADIAL FAN MENU (Mobile only) ================= -->
+  <div class="fab-menu" id="fabMenu" aria-label="Quick actions (mobile)">
+    <button class="fab-btn main" aria-expanded="false" aria-controls="fabActions" aria-label="Toggle quick actions"><i
+        class="fa-solid fa-plus"></i></button>
+    <div class="fab-actions" id="fabActions" aria-hidden="true">
+      <a href="{% url 'home' %}" class="fab-btn" data-angle="180" aria-label="Home"><i
+          class="fa-solid fa-house"></i></a>
+      <a href="{% url 'all_blogs' %}" class="fab-btn" data-angle="170" aria-label="All Blogs"><i
+          class="fa-regular fa-newspaper"></i></a>
+      <a href="{% url 'blog' %}" class="fab-btn" data-angle="160" aria-label="Create Blog"><i
+          class="fa-solid fa-pen-to-square"></i></a>
+      <button id="fabSearch" class="fab-btn" data-angle="140" aria-label="Search"><i
+          class="fa-solid fa-magnifying-glass"></i></button>
+      <button id="fabTheme" class="fab-btn" data-angle="120" aria-label="Toggle theme"><i
+          class="fa-solid fa-moon"></i></button>
     </div>
   </div>
 
@@ -1164,6 +1250,75 @@
         if (e.key === 'Escape') { closeSearchDrawer(); closeAIPopup(); closeMore(); }
         if (e.key === 'k' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); openSearchDrawer(); }
       });
+
+      /* =============================
+         FAB RADIAL MENU BEHAVIOR
+         quarter-circle fan (up + left), staggered animation
+         ============================= */
+      (function () {
+        const fabMenu = document.getElementById('fabMenu');
+        if (!fabMenu) return;
+        const mainBtn = fabMenu.querySelector('.main');
+        const actions = Array.from(fabMenu.querySelectorAll('.fab-actions .fab-btn'));
+        const fabSearch = document.getElementById('fabSearch');
+        const fabTheme = document.getElementById('fabTheme');
+
+        function openFAB() {
+          const radius = 70; // keeps items visible on most phones
+          const startAngle = 0;  // straight up
+          const endAngle = 90;   // straight left
+          const step = (endAngle - startAngle) / (actions.length - 1 || 1);
+
+          actions.forEach((btn, i) => {
+            const angle = (startAngle + step * i) * (Math.PI / 180);
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            setTimeout(() => {
+              btn.style.transform = `translate(${-x}px, ${-y}px) scale(1)`;
+              btn.style.opacity = '1';
+            }, i * 80);
+          });
+
+          fabMenu.classList.add('open');
+          mainBtn.setAttribute('aria-expanded', 'true');
+          document.getElementById('fabActions')?.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeFAB() {
+          actions.forEach((btn, i) => {
+            setTimeout(() => {
+              btn.style.transform = 'translate(0,0) scale(0.5)';
+              btn.style.opacity = '0';
+            }, i * 40);
+          });
+          fabMenu.classList.remove('open');
+          mainBtn.setAttribute('aria-expanded', 'false');
+          document.getElementById('fabActions')?.setAttribute('aria-hidden', 'true');
+        }
+
+        mainBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (fabMenu.classList.contains('open')) closeFAB(); else openFAB();
+        });
+
+        // hook mobile search + theme actions to existing handlers:
+        if (fabSearch) fabSearch.addEventListener('click', (e) => { e.stopPropagation(); if (typeof openSearchDrawer === 'function') openSearchDrawer(); });
+        if (fabTheme) fabTheme.addEventListener('click', (e) => { e.stopPropagation(); themeToggle && themeToggle.click(); });
+
+        // close fab when clicking outside on mobile
+        document.addEventListener('click', (ev) => {
+          if (!fabMenu.contains(ev.target) && fabMenu.classList.contains('open')) closeFAB();
+        });
+
+        // recalc on resize (no precomputed dataset needed — positions computed at open)
+        window.addEventListener('resize', () => {
+          if (fabMenu.classList.contains('open')) {
+            // re-open to recompute positions gracefully
+            closeFAB();
+            setTimeout(openFAB, 120);
+          }
+        });
+      })();
     });
   </script>
 
