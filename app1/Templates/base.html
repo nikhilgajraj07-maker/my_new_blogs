@@ -149,11 +149,7 @@
       border-radius: 8px
     }
 
-    /* ===== Pill Dock =====
-       Updated to behave correctly on mobile:
-       - Desktop: left vertical dock (same as before)
-       - Mobile: centered bottom dock with large tappable targets + safe-area handling
-    */
+    /* ===== Pill Dock ===== */
     .pill-dock {
       position: fixed;
       left: 18px;
@@ -232,14 +228,12 @@
     /* ===== Mobile behavior for pill dock (kept, but we'll hide it with a stronger rule below) ===== */
     @media (max-width: 768px) {
       .pill-dock {
-        /* center bottom, respect safe-area on iOS */
         left: 50%;
         top: auto;
         bottom: calc(12px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
         flex-direction: row;
         width: calc(100% - 32px);
-        /* provide gutter on each side */
         max-width: 980px;
         padding: 10px;
         gap: 8px;
@@ -251,7 +245,6 @@
         border: 1px solid rgba(255, 255, 255, 0.04);
       }
 
-      /* make tap targets larger and inline */
       .pill-item {
         width: auto;
         height: 48px;
@@ -270,7 +263,6 @@
         font-size: 18px;
       }
 
-      /* Hide tooltips on touch to avoid overflow */
       .pill-item[data-tip]::after {
         display: none;
       }
@@ -625,7 +617,6 @@
       display: block;
     }
 
-    /* Desktop / tablet: dropdown beside the dock */
     @media (min-width: 769px) {
       #moreMenu {
         position: fixed;
@@ -644,7 +635,6 @@
       }
     }
 
-    /* Mobile: full screen so all buttons are visible */
     @media (max-width: 768px) {
       #moreMenu {
         position: fixed;
@@ -706,7 +696,6 @@
       cursor: pointer;
     }
 
-    /* reduced motion preference */
     @media (prefers-reduced-motion: reduce) {
       * {
         animation: none !important;
@@ -716,14 +705,17 @@
 
     /* ==========================
        MOBILE RADIAL FAB MENU
-       (added without renaming existing classes)
+       Draggable + auto-direction + staggered animation
        ========================== */
     .fab-menu {
+      left: 16px;
       position: fixed;
-      bottom: 28px;
-      right: 28px;
+      bottom: 20px;
       z-index: 1600;
       display: none;
+      touch-action: none;
+      align-items: center;
+      flex-direction: column-reverse;
     }
 
     .fab-btn {
@@ -739,44 +731,97 @@
       font-size: 20px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, .35);
       cursor: pointer;
-      transition: transform .3s ease, opacity .3s ease;
+      transition: transform .28s cubic-bezier(.2, .9, .2, 1), opacity .22s ease;
+      position: relative;
+      z-index: 10;
     }
 
     .fab-btn.main {
-      z-index: 2;
+      z-index: 20;
     }
 
     .fab-actions {
-      position: absolute;
-      bottom: 0;
-      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 8px;
       pointer-events: none;
+      /* Initially disable pointer events */
     }
 
     .fab-actions .fab-btn {
-      position: absolute;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 10px;
       opacity: 0;
-      transform: translate(0, 0) scale(0.5);
-      transition: transform 0.3s ease, opacity 0.3s ease;
+      transform: translateY(20px) scale(.5);
+      transition: transform .25s ease, opacity .25s ease;
+      pointer-events: auto;
+      /* Enable pointer events for buttons */
     }
 
     .fab-menu.open .fab-actions {
       pointer-events: auto;
+      /* Enable pointer events when menu is open */
     }
 
     .fab-menu.open .fab-actions .fab-btn {
       opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+      /* Ensure buttons are clickable */
     }
 
-    /* Hide the dock on small screens, show FAB instead (non-destructive override) */
     @media (max-width: 768px) {
       .pill-dock {
         display: none !important;
       }
 
       .fab-menu {
-        display: block;
+        display: flex;
       }
+    }
+
+    @media (max-width: 360px) {
+      .fab-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+      }
+    }
+
+    /* Staggered reveal for vertical FAB actions */
+    .fab-actions .fab-btn:nth-child(1) {
+      transition-delay: .05s;
+    }
+
+    .fab-actions .fab-btn:nth-child(2) {
+      transition-delay: .10s;
+    }
+
+    .fab-actions .fab-btn:nth-child(3) {
+      transition-delay: .15s;
+    }
+
+    .fab-actions .fab-btn:nth-child(4) {
+      transition-delay: .20s;
+    }
+
+    .fab-actions .fab-btn:nth-child(5) {
+      transition-delay: .25s;
+    }
+
+    /* For the new buttons */
+    .fab-actions .fab-btn:nth-child(6) {
+      transition-delay: .30s;
+    }
+
+    .fab-actions .fab-btn:nth-child(7) {
+      transition-delay: .35s;
+    }
+
+    .fab-actions .fab-btn:nth-child(8) {
+      transition-delay: .40s;
     }
   </style>
 </head>
@@ -928,20 +973,44 @@
   </div>
 
   <!-- ================= FLOATING RADIAL FAN MENU (Mobile only) ================= -->
-  <div class="fab-menu" id="fabMenu" aria-label="Quick actions (mobile)">
+  <div class="fab-menu" id="fabMenu" aria-label="Quick actions (mobile)" style="">
     <button class="fab-btn main" aria-expanded="false" aria-controls="fabActions" aria-label="Toggle quick actions"><i
         class="fa-solid fa-plus"></i></button>
     <div class="fab-actions" id="fabActions" aria-hidden="true">
-      <a href="{% url 'home' %}" class="fab-btn" data-angle="180" aria-label="Home"><i
+      <a href="{% url 'home' %}" class="fab-btn" data-role="home" aria-label="Home"><i
           class="fa-solid fa-house"></i></a>
-      <a href="{% url 'all_blogs' %}" class="fab-btn" data-angle="170" aria-label="All Blogs"><i
+      <a href="{% url 'all_blogs' %}" class="fab-btn" data-role="blogs" aria-label="All Blogs"><i
           class="fa-regular fa-newspaper"></i></a>
-      <a href="{% url 'blog' %}" class="fab-btn" data-angle="160" aria-label="Create Blog"><i
+      <a href="{% url 'blog' %}" class="fab-btn" data-role="create" aria-label="Create Blog"><i
           class="fa-solid fa-pen-to-square"></i></a>
-      <button id="fabSearch" class="fab-btn" data-angle="140" aria-label="Search"><i
+      <button id="fabSearch" class="fab-btn" data-role="search" aria-label="Search"><i
           class="fa-solid fa-magnifying-glass"></i></button>
-      <button id="fabTheme" class="fab-btn" data-angle="120" aria-label="Toggle theme"><i
+      <button id="fabTheme" class="fab-btn" data-role="theme" aria-label="Toggle theme"><i
           class="fa-solid fa-moon"></i></button>
+
+      <!-- Profile button -->
+      {% if user.is_authenticated %}
+      <a href="{% url 'profile' %}" class="fab-btn" data-role="profile" aria-label="Profile">
+        {% if user.profile and user.profile.initials %}
+        <span style="font-weight:700;color:inherit">{{ user.profile.initials }}</span>
+        {% elif user.first_name %}
+        <span style="font-weight:700;color:inherit">{{ user.first_name|slice:':1'|upper }}</span>
+        {% else %}
+        <i class="fa-solid fa-user"></i>
+        {% endif %}
+      </a>
+      {% else %}
+      <a href="{% url 'login' %}" class="fab-btn" data-role="login" aria-label="Login"><i
+          class="fa-solid fa-right-to-bracket"></i></a>
+      {% endif %}
+
+      <!-- More options button -->
+      <button id="fabMore" class="fab-btn" data-role="more" aria-label="More options"><i
+          class="fa-solid fa-ellipsis"></i></button>
+
+      <!-- AI Assistant button -->
+      <button id="fabAI" class="fab-btn" data-role="ai" aria-label="AI Assistant"><i
+          class="fa-solid fa-robot"></i></button>
     </div>
   </div>
 
@@ -1190,12 +1259,10 @@
         if (!moreMenu) return;
         moreMenu.classList.add('open');
         moreMenu.setAttribute('aria-hidden', 'false');
-        // show mobile header only on small screens
         if (window.innerWidth <= 768) {
           const header = moreMenu.querySelector('.more-header');
           if (header) header.style.display = 'flex';
         }
-        // focus first link
         const firstLink = moreMenu.querySelector('.more-link');
         setTimeout(() => firstLink && firstLink.focus(), 60);
       }
@@ -1252,71 +1319,88 @@
       });
 
       /* =============================
-         FAB RADIAL MENU BEHAVIOR
-         quarter-circle fan (up + left), staggered animation
+         SMART DRAGGABLE FAB + AUTO-PLACED RADIAL MENU
          ============================= */
-      (function () {
+      (function simpleVerticalFab() {
         const fabMenu = document.getElementById('fabMenu');
         if (!fabMenu) return;
         const mainBtn = fabMenu.querySelector('.main');
-        const actions = Array.from(fabMenu.querySelectorAll('.fab-actions .fab-btn'));
-        const fabSearch = document.getElementById('fabSearch');
-        const fabTheme = document.getElementById('fabTheme');
+        const actionsEl = document.getElementById('fabActions');
 
         function openFAB() {
-          const radius = 70; // keeps items visible on most phones
-          const startAngle = 0;  // straight up
-          const endAngle = 90;   // straight left
-          const step = (endAngle - startAngle) / (actions.length - 1 || 1);
-
-          actions.forEach((btn, i) => {
-            const angle = (startAngle + step * i) * (Math.PI / 180);
-            const x = Math.cos(angle) * radius;
-            const y = Math.sin(angle) * radius;
-            setTimeout(() => {
-              btn.style.transform = `translate(${-x}px, ${-y}px) scale(1)`;
-              btn.style.opacity = '1';
-            }, i * 80);
-          });
-
           fabMenu.classList.add('open');
-          mainBtn.setAttribute('aria-expanded', 'true');
-          document.getElementById('fabActions')?.setAttribute('aria-hidden', 'false');
+          mainBtn && mainBtn.setAttribute('aria-expanded', 'true');
+          actionsEl && actionsEl.setAttribute('aria-hidden', 'false');
+          // Enable pointer events for actions container when open
+          actionsEl.style.pointerEvents = 'auto';
         }
 
         function closeFAB() {
-          actions.forEach((btn, i) => {
-            setTimeout(() => {
-              btn.style.transform = 'translate(0,0) scale(0.5)';
-              btn.style.opacity = '0';
-            }, i * 40);
-          });
           fabMenu.classList.remove('open');
-          mainBtn.setAttribute('aria-expanded', 'false');
-          document.getElementById('fabActions')?.setAttribute('aria-hidden', 'true');
+          mainBtn && mainBtn.setAttribute('aria-expanded', 'false');
+          actionsEl && actionsEl.setAttribute('aria-hidden', 'true');
+          // Disable pointer events for actions container when closed
+          actionsEl.style.pointerEvents = 'none';
         }
 
-        mainBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (fabMenu.classList.contains('open')) closeFAB(); else openFAB();
+        mainBtn && mainBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          ev.preventDefault(); // Prevent default action
+          fabMenu.classList.contains('open') ? closeFAB() : openFAB();
         });
 
-        // hook mobile search + theme actions to existing handlers:
-        if (fabSearch) fabSearch.addEventListener('click', (e) => { e.stopPropagation(); if (typeof openSearchDrawer === 'function') openSearchDrawer(); });
-        if (fabTheme) fabTheme.addEventListener('click', (e) => { e.stopPropagation(); themeToggle && themeToggle.click(); });
-
-        // close fab when clicking outside on mobile
         document.addEventListener('click', (ev) => {
-          if (!fabMenu.contains(ev.target) && fabMenu.classList.contains('open')) closeFAB();
+          if (!fabMenu.contains(ev.target) && fabMenu.classList.contains('open')) {
+            closeFAB();
+          }
         });
 
-        // recalc on resize (no precomputed dataset needed — positions computed at open)
-        window.addEventListener('resize', () => {
-          if (fabMenu.classList.contains('open')) {
-            // re-open to recompute positions gracefully
-            closeFAB();
-            setTimeout(openFAB, 120);
-          }
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') closeFAB();
+        });
+
+        // hook actions to existing handlers
+        const fabSearch = document.getElementById('fabSearch');
+        const fabTheme = document.getElementById('fabTheme');
+        const fabMore = document.getElementById('fabMore');
+        const fabAI = document.getElementById('fabAI');
+
+        // Add event listeners with proper event handling
+        fabSearch && fabSearch.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.preventDefault(); // Prevent default action
+          document.getElementById('openSearch')?.click();
+          closeFAB();
+        });
+
+        fabTheme && fabTheme.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.preventDefault(); // Prevent default action
+          document.getElementById('themeToggle')?.click();
+          closeFAB();
+        });
+
+        fabMore && fabMore.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.preventDefault(); // Prevent default action
+          document.getElementById('moreMenuBtn')?.click();
+          closeFAB();
+        });
+
+        fabAI && fabAI.addEventListener('click', (e) => {
+          e.stopPropagation();
+          e.preventDefault(); // Prevent default action
+          document.getElementById('openAI')?.click();
+          closeFAB();
+        });
+
+        // Handle all link buttons
+        document.querySelectorAll('.fab-actions a.fab-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Let the link navigate naturally
+            setTimeout(() => closeFAB(), 100);
+          });
         });
       })();
     });

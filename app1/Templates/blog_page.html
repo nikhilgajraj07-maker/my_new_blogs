@@ -1,10 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}Blog page{% endblock %}
-
 {% block pagecontent %}
 <style>
+    /* === Blog Cards === */
     .blog-card {
         border: none;
         border-radius: 15px;
@@ -15,65 +14,30 @@
         transition: transform .4s, box-shadow .4s;
         display: flex;
         flex-direction: column;
-        height: 100%
+        height: 100%;
     }
-
     .blog-card:hover {
         transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 10px 30px rgba(0, 123, 255, .3)
+        box-shadow: 0 10px 30px rgba(0, 123, 255, .3);
     }
-
     .blog-card img {
         border-top-left-radius: 15px;
         border-top-right-radius: 15px;
         transition: transform .4s;
         object-fit: cover;
-        width: 100%
+        width: 100%;
+        height: 200px;
     }
-
-    .blog-card:hover img {
-        transform: scale(1.05)
-    }
-
+    .blog-card:hover img { transform: scale(1.05); }
     .blog-card .card-title {
         font-size: 1.2rem;
         font-weight: 700;
         color: #007bff;
-        transition: color .3s
+        transition: color .3s;
     }
+    .blog-card:hover .card-title { color: #0056b3; }
 
-    .blog-card:hover .card-title {
-        color: #0056b3
-    }
-
-    .blog-card small.text-muted {
-        font-style: italic;
-        font-size: .85rem;
-        color: #6c757d;
-        position: relative;
-        padding-left: 1.2rem
-    }
-
-    .blog-card small.text-muted::before {
-        content: '\f007';
-        font-family: 'Font Awesome 5 Free';
-        font-weight: 900;
-        position: absolute;
-        left: 0;
-        color: #007bff;
-        font-size: .9rem
-    }
-
-    .author-badge {
-        background: linear-gradient(135deg, #6a11cb, #2575fc);
-        color: #fff;
-        font-size: .8rem;
-        font-weight: 700;
-        padding: 4px 10px;
-        border-radius: 50px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, .3)
-    }
-
+    /* === Blog Form === */
     .form-container {
         background: #fff;
         padding: 20px;
@@ -81,158 +45,103 @@
         box-shadow: 0 4px 15px rgba(0, 0, 0, .08);
         height: 100%;
         display: flex;
-        flex-direction: column
+        flex-direction: column;
+        position: relative;
+        z-index: 1;
     }
-
     .form-container h2 {
         font-size: 1.4rem;
         font-weight: 600;
         margin-bottom: 15px;
         border-bottom: 2px solid #eee;
-        padding-bottom: 5px
+        padding-bottom: 5px;
     }
-
-    .form-container form {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column
-    }
-
-    input[name='author'],
+    .form-container form { flex-grow: 1; display: flex; flex-direction: column; }
     input[name='title'],
+    input[name='image'],
     textarea {
         border-radius: 8px !important;
         border: 1px solid #ccc !important;
-        padding: 8px 12px !important
+        padding: 8px 12px !important;
     }
 
-    /* CKEditor skin + SCROLLER */
-    .ck.ck-editor {
-        border: 1px solid #ddd;
-        border-radius: 12px;
-        display: flex;
-        flex-direction: column;
-        height: 100%
-    }
-
+    /* === CKEditor === */
+    .ck.ck-editor { border: 1px solid #ddd; border-radius: 12px; display: flex; flex-direction: column; height: 100%; }
     .ck.ck-toolbar {
-        border-top-left-radius: 12px;
-        border-top-right-radius: 12px;
-        position: sticky;
-        top: 0;
-        z-index: 50;
-        background: #fff;
-        border-bottom: 1px solid #ddd;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, .08)
+        border-top-left-radius: 12px; border-top-right-radius: 12px;
+        position: sticky; top: 0; z-index: 50; background: #fff;
+        border-bottom: 1px solid #ddd; box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+    }
+    .ck.ck-editor__main > .ck-editor__editable {
+        min-height: 340px; max-height: 420px; overflow-y: auto;
+        border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
     }
 
-    .ck.ck-editor__main>.ck-editor__editable {
-        min-height: 340px;
-        max-height: 420px;
-        overflow-y: auto;
-        border-bottom-left-radius: 12px;
-        border-bottom-right-radius: 12px;
-    }
+    /* === Dark Mode === */
+    #editor-card.editor-dark .ck.ck-editor { background: #1b1b1b; border-color: #2a2a2a; }
+    #editor-card.editor-dark .ck.ck-toolbar { background: #222; border-color: #2a2a2a; }
+    #editor-card.editor-dark .ck.ck-toolbar .ck-button .ck-button__label { color: #e6e6e6; }
+    #editor-card.editor-dark .ck.ck-toolbar .ck-button .ck-icon { filter: brightness(1.2); }
+    #editor-card.editor-dark .ck-content { background: #121212; color: #e6e6e6; }
+    #editor-card.editor-dark .ck.ck-editor__main { border-color: #2a2a2a; }
 
-    /* Dark mode */
-    #editor-card.editor-dark .ck.ck-editor {
-        background: #1b1b1b;
-        border-color: #2a2a2a
-    }
-
-    #editor-card.editor-dark .ck.ck-toolbar {
-        background: #222;
-        border-color: #2a2a2a
-    }
-
-    #editor-card.editor-dark .ck.ck-toolbar .ck-button .ck-button__label {
-        color: #e6e6e6
-    }
-
-    #editor-card.editor-dark .ck.ck-toolbar .ck-button .ck-icon {
-        filter: brightness(1.2)
-    }
-
-    #editor-card.editor-dark .ck-content {
-        background: #121212;
-        color: #e6e6e6
-    }
-
-    #editor-card.editor-dark .ck.ck-editor__main {
-        border-color: #2a2a2a
-    }
-
-    /* Emoji panel */
-    .emoji-wrap {
-        position: relative
-    }
-
-    .emoji-panel {
-        display: none;
-        position: absolute;
-        z-index: 20;
-        top: 38px;
-        right: 0;
-        background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 10px;
+    /* === Emoji & More Panels === */
+    .emoji-panel, .more-menu {
+        display: none; position: fixed; z-index: 99999; background: #fff;
+        border: 1px solid #ddd; border-radius: 10px;
         box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
-        padding: 8px;
-        max-width: 300px;
-        max-height: 220px;
-        overflow: auto
+        padding: 8px; transition: opacity .2s ease, transform .2s ease;
+        opacity: 0; transform: translateY(-10px);
     }
-
+    .emoji-panel[aria-hidden="false"], .more-menu[aria-hidden="false"] { opacity: 1; transform: translateY(0); }
+    .emoji-panel { max-width: 300px; max-height: 220px; overflow: auto; }
     .emoji-panel button {
-        border: none;
-        background: transparent;
-        font-size: 20px;
-        line-height: 1.2;
-        padding: 6px;
-        border-radius: 8px
+        border: none; background: transparent; font-size: 20px;
+        line-height: 1.2; padding: 6px; border-radius: 8px; cursor: pointer;
+        transition: background-color .2s;
     }
-
-    .emoji-panel button:hover {
-        background: #f1f3f5;
-        cursor: pointer
+    .emoji-panel button:hover { background: #f1f3f5; }
+    .emoji-panel button:focus { outline: 2px solid #007bff; outline-offset: -2px; }
+    .more-menu { min-width: 200px; }
+    .more-menu button {
+        display: flex; align-items: center; width: 100%;
+        padding: 10px 12px; margin: 2px 0; border-radius: 8px;
+        font-size: 14px; font-weight: 500; text-align: left;
+        border: none; background: transparent; cursor: pointer;
+        transition: all .2s ease;
+    }
+    .more-menu button:hover { background-color: #f0f7ff; transform: translateX(4px); }
+    .more-menu button span { margin-right: 10px; font-size: 18px; }
+    #editor-card.editor-dark .emoji-panel, #editor-card.editor-dark .more-menu {
+        background: #2a2a2a; border-color: #444; box-shadow: 0 4px 20px rgba(0,0,0,.4);
     }
 
     @media (max-width:768px) {
-        .blog-card img {
-            height: 160px !important
-        }
-
-        .form-container {
-            padding: 15px;
-            margin-top: 10px
-        }
-
-        .card-title {
-            font-size: 1rem !important
-        }
-
-        .card-text {
-            font-size: .85rem !important
-        }
+        .blog-card img { height: 160px !important; }
+        .form-container { padding: 15px; margin-top: 10px; }
+        .card-title { font-size: 1rem !important; }
+        .card-text { font-size: .85rem !important; }
+        .more-menu { min-width: 180px; }
+        .more-menu button { padding: 8px 10px; font-size: 13px; }
+        .more-menu button span { font-size: 16px; }
     }
 </style>
 
 <div class="container mt-2">
     <div class="row g-4 flex-column flex-lg-row">
+
         <!-- Saved Blogs -->
         <div class="col-lg-6 col-12">
             <h2 class="mb-3">Saved Blogs</h2>
             <div class="row" id="blog-list">
                 {% for blog in blogs|slice:':2' %}
                 <div class="col-12 mb-3 blog-item">
-                    <div class="card blog-card position-relative">
+                    <article class="card blog-card position-relative">
                         <a href="{% url 'blog_detail' blog.id %}">
                             {% if blog.image %}
-                            <img src="{{ blog.image.url }}" class="card-img-top" alt="{{ blog.title }}"
-                                style="height:200px" />
+                                <img src="{{ blog.image.url }}" class="card-img-top" alt="{{ blog.title }}">
                             {% else %}
-                            <img src="{% static 'images/default_blog.jpg' %}" class="card-img-top"
-                                alt="Default blog image" style="height:200px" />
+                                <img src="{% static 'images/default_blog.jpg' %}" class="card-img-top" alt="Default blog image">
                             {% endif %}
                         </a>
                         <div class="card-body d-flex flex-column justify-content-between">
@@ -242,22 +151,23 @@
                                         {{ blog.title|truncatechars:50 }}
                                     </a>
                                 </h5>
-                                <p class="card-text text-muted small">{{ blog.content|striptags|truncatewords:20 }}</p>
+                                <p class="card-text text-muted small">
+                                    {{ blog.content|striptags|truncatewords:20 }}
+                                </p>
                             </div>
+
                             {% if request.user == blog.author or request.user.is_staff %}
                             <div class="d-flex justify-content-between align-items-center mt-auto">
-                                <a href="{% url 'blog_edit' blog.id %}" class="btn btn-outline-warning btn-sm">✏
-                                    Edit</a>
+                                <a href="{% url 'blog_edit' blog.id %}" class="btn btn-outline-warning btn-sm">✏ Edit</a>
                                 <form action="{% url 'blog_delete' blog.id %}" method="post" class="d-inline">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-outline-danger btn-sm"
-                                        onclick="return confirm('Are you sure you want to delete this blog?');">🗑
-                                        Delete</button>
+                                            onclick="return confirm('Are you sure you want to delete this blog?');">🗑 Delete</button>
                                 </form>
                             </div>
                             {% endif %}
                         </div>
-                    </div>
+                    </article>
                 </div>
                 {% empty %}
                 <div class="text-center text-muted">No blogs yet.</div>
@@ -276,36 +186,38 @@
             <div class="form-container" id="editor-card">
                 <h2>Write a New Blog</h2>
 
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+
                 <form method="POST" enctype="multipart/form-data" id="blog-entry-form">
                     {% csrf_token %}
 
                     <div class="mb-3">
-                        {{ form.title.label_tag }} {{ form.title }}
+                        {{ form.title.label_tag }}
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger small">{{ form.title.errors }}</div>
+                        {% endif %}
                     </div>
 
                     <div class="mb-3">
-                        {{ form.image.label_tag }} {{ form.image }}
+                        {{ form.image.label_tag }}
+                        {{ form.image }}
+                        {% if form.image.errors %}
+                            <div class="text-danger small">{{ form.image.errors }}</div>
+                        {% endif %}
                     </div>
 
-                    <!-- Hidden Django field to submit HTML -->
-                    <textarea name="content" id="id_content"
-                        style="display:none;">{{ form.content.value|default_if_none:'' }}</textarea>
+                    <!-- Hidden Django field -->
+                    <textarea name="content" id="id_content" hidden></textarea>
 
-                    <div class="d-flex justify-content-between align-items-center mb-2 emoji-wrap">
-                        <div>
-                            <button type="button" id="toggle-dark" class="btn btn-sm btn-outline-secondary">🌙
-                                Dark</button>
-                            <button type="button" id="emoji-btn" class="btn btn-sm btn-outline-primary ms-2">😀
-                                Emojis</button>
-                        </div>
-                        <small id="autosave-indicator" class="text-muted">Draft: —</small>
-                        <div id="emoji-panel" class="emoji-panel" aria-hidden="true"></div>
-                    </div>
+                    <!-- CKEditor mount with escaped initial content -->
+                    <div id="editor" data-initial="{{ form.content.value|default_if_none:''|escape }}"></div>
 
-                    <!-- CKEditor mount -->
-                    <div id="editor">{{ form.content.value|default_if_none:''|safe }}</div>
-
-                    <div id="word-count" class="text-muted small mt-2"></div>
+                    <!-- Indicators -->
+                    <div id="word-count" class="text-muted small mt-2" aria-live="polite"></div>
+                    <div id="autosave-indicator" class="text-muted small mt-1" aria-live="polite"></div>
 
                     <button type="submit" class="btn btn-primary w-100 mt-3">Publish Blog</button>
                 </form>
@@ -315,63 +227,71 @@
 </div>
 
 <script>
+(function () {
     document.addEventListener('DOMContentLoaded', function () {
-        const hiddenField = document.getElementById('id_content');
-        const autosaveEl = document.getElementById('autosave-indicator');
-        const mountEl = document.getElementById('editor');
-        const editorCard = document.getElementById('editor-card');
-        const darkBtn = document.getElementById('toggle-dark');
-        const wordCountEl = document.getElementById('word-count');
-        const emojiBtn = document.getElementById('emoji-btn');
-        const emojiPanel = document.getElementById('emoji-panel');
+        var hiddenField = document.getElementById('id_content');
+        var autosaveEl  = document.getElementById('autosave-indicator');
+        var mountEl     = document.getElementById('editor');
+        var editorCard  = document.getElementById('editor-card');
+        var wordCountEl = document.getElementById('word-count');
+        var form        = document.getElementById('blog-entry-form');
 
-        if (!(window.CKEDITOR && CKEDITOR.ClassicEditor)) {
-            console.error('CKEditor 5 super-build not loaded (check base.html include).');
-            return;
-        }
+        // Accept only images in the file input (client hint)
+        var imageInput = document.querySelector("input[name='image']");
+        if (imageInput) imageInput.setAttribute('accept', 'image/*');
 
         // Dark theme boot
-        const THEME_KEY = 'blog_editor_theme';
-        const savedTheme = localStorage.getItem(THEME_KEY);
+        var THEME_KEY  = 'blog_editor_theme';
+        var savedTheme = localStorage.getItem(THEME_KEY);
         if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             editorCard.classList.add('editor-dark');
         }
-        updateDarkButton();
 
-        // Django CSRF from cookie (recommended)
+        // CSRF helper
         function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
+            var value = '; ' + document.cookie;
+            var parts = value.split('; ' + name + '=');
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
-        const CSRF = getCookie('csrftoken');
+        var CSRF = getCookie('csrftoken');
+
+        // Fallback if CKEditor is not loaded
+        if (!(window.CKEDITOR && CKEDITOR.ClassicEditor)) {
+            console.error('CKEditor 5 super-build not loaded (check base.html include).');
+            if (hiddenField) {
+                hiddenField.removeAttribute('hidden');
+                hiddenField.style.display = 'block';
+                hiddenField.value = (mountEl && mountEl.getAttribute('data-initial')) || '';
+            }
+            if (mountEl) mountEl.style.display = 'none';
+            return;
+        }
 
         CKEDITOR.ClassicEditor.create(mountEl, {
             placeholder: '✍️ Start writing your blog...',
             toolbar: {
                 items: [
-                    'heading', '|',
-                    'bold', 'italic', 'underline', 'strikethrough', 'link', 'highlight', 'removeFormat', '|',
-                    'fontFamily', 'fontSize', 'fontColor', 'fontBackgroundColor', 'alignment', '|',
-                    'bulletedList', 'numberedList', 'outdent', 'indent', '|',
-                    'blockQuote', 'insertTable', 'mediaEmbed', 'horizontalLine', '|',
-                    'uploadImage', 'imageInsert', '|',   // image buttons
-                    'specialCharacters', 'findAndReplace', '|',
-                    'code', 'codeBlock', 'sourceEditing', '|',
-                    'undo', 'redo'
+                    'heading','|',
+                    'bold','italic','underline','strikethrough','link','highlight','removeFormat','|',
+                    'fontFamily','fontSize','fontColor','fontBackgroundColor','alignment','|',
+                    'bulletedList','numberedList','outdent','indent','|',
+                    'blockQuote','insertTable','mediaEmbed','horizontalLine','|',
+                    'uploadImage','imageInsert','|',
+                    'specialCharacters','findAndReplace','|',
+                    'code','codeBlock','sourceEditing','|',
+                    'undo','redo'
                 ],
                 shouldNotGroupWhenFull: true
             },
             image: {
                 toolbar: [
-                    'imageTextAlternative', 'toggleImageCaption',
-                    'imageStyle:inline', 'imageStyle:block', 'imageStyle:side'
+                    'imageTextAlternative','toggleImageCaption',
+                    'imageStyle:inline','imageStyle:block','imageStyle:side'
                 ],
                 insert: { type: 'auto' }
             },
-            // Simple Upload adapter -> Django endpoint
             simpleUpload: {
-                uploadUrl: "{% url 'upload_image' %}",   // matches the URL added below
+                uploadUrl: "{% url 'upload_image' %}",
                 headers: {
                     'X-CSRFToken': CSRF,
                     'X-Requested-With': 'XMLHttpRequest'
@@ -379,104 +299,168 @@
             },
             table: {
                 contentToolbar: [
-                    'tableColumn', 'tableRow', 'mergeTableCells',
-                    'tableCellProperties', 'tableProperties'
+                    'tableColumn','tableRow','mergeTableCells',
+                    'tableCellProperties','tableProperties'
                 ]
             },
-            // Remove paid/collab/AI plugins to avoid license errors
             removePlugins: [
-                'CKBox', 'CKFinder', 'EasyImage',
-                'ExportPdf', 'ExportWord',
-                'WProofreader', 'MathType',
-                'SlashCommand', 'Template', 'DocumentOutline', 'FormatPainter', 'TableOfContents',
-                'Pagination', 'MultiLevelList', 'CaseChange', 'CaseChangeEditing',
-                'PresenceList', 'Comments', 'TrackChanges', 'TrackChangesData', 'RevisionHistory',
-                'RealTimeCollaborativeComments', 'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory',
-                'AiAssistant', 'AIAssistant', 'CKEditorAI',
-                'PasteFromOfficeEnhanced', 'Mermaid'
+                'CKBox','CKFinder','EasyImage',
+                'ExportPdf','ExportWord',
+                'WProofreader','MathType',
+                'SlashCommand','Template',
+                'PresenceList','Comments','TrackChanges','RevisionHistory',
+                'RealTimeCollaborativeComments','RealTimeCollaborativeTrackChanges','RealTimeCollaborativeRevisionHistory','Pagination','DocumentOutline'
             ],
-            // Word count display
             wordCount: {
-                onUpdate: stats => {
+                onUpdate: function (stats) {
                     if (wordCountEl) {
-                        wordCountEl.textContent = `Words: ${stats.words} · Characters: ${stats.characters}`;
+                        wordCountEl.textContent = 'Words: ' + stats.words + ' · Characters: ' + stats.characters;
                     }
                 }
             }
-        })
-            .then((editor) => {
-                // preload hidden field if editing
-                if (hiddenField && hiddenField.value) editor.setData(hiddenField.value);
+        }).then(function (editor) {
+            window.editor = editor;
 
-                // simple local draft
-                const blogId = "{{ form.instance.id|default:'' }}";
-                const draftKey = blogId ? ('blog_draft_' + blogId) : 'blog_draft_new';
+            // Initial data: server value > draft
+            var blogId   = "{{ form.instance.id|default:'' }}";
+            var draftKey = blogId ? ('blog_draft_' + blogId) : 'blog_draft_new';
+            var initial  = (mountEl && mountEl.getAttribute('data-initial')) || '';
+            var draft    = localStorage.getItem(draftKey);
+            var startData = initial || draft || '';
+            editor.setData(startData);
+            if (hiddenField) hiddenField.value = startData;
+            if (autosaveEl) autosaveEl.textContent = (draft && !initial) ? 'Draft: restored' : 'Draft: —';
 
-                if ((!hiddenField || !hiddenField.value) && localStorage.getItem(draftKey)) {
-                    editor.setData(localStorage.getItem(draftKey));
-                    if (autosaveEl) autosaveEl.textContent = 'Draft: restored';
-                } else {
-                    if (autosaveEl) autosaveEl.textContent = 'Draft: —';
+            // Emoji panel
+            var emojiPanel = document.createElement('div');
+            emojiPanel.className = 'emoji-panel';
+            emojiPanel.setAttribute('aria-hidden', 'true');
+            var EMOJIS = "😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😇 😍 🤩 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤗 🤔 🤨 😐 😑 😶 🙄 😏 😣 😥 😮 🤐 😯 😪 😫 🥱 😴 😌 🤤 😒 😓 😔 😕 🥲 😬 🤥 😶‍🌫️ 🥹 🥰 😻 👍 👎 👏 🙌 🤝 💪 ✍️ ✅ ❌ ✨ ❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 💯 🔥 🎉 🥳 ⭐".split(' ');
+            emojiPanel.innerHTML = EMOJIS.map(function (e) {
+                return '<button type="button" aria-label="Insert emoji ' + e + '">' + e + '</button>';
+            }).join('');
+            document.body.appendChild(emojiPanel);
+
+            // More menu
+            var morePanel = document.createElement('div');
+            morePanel.className = 'more-menu';
+            morePanel.setAttribute('aria-hidden', 'true');
+            morePanel.innerHTML =
+                '<button type="button" data-action="emoji"><span>😀</span> Insert Emoji</button>' +
+                '<button type="button" data-action="dark"><span>🌙</span> Toggle Dark Mode</button>';
+            document.body.appendChild(morePanel);
+
+            // Inject ⋯ button before Undo (fallback: append)
+            var toolbarEl = editor.ui.view.toolbar.element;
+            var undoBtn   = toolbarEl.querySelector('button[aria-label="Undo"]');
+            var moreBtn   = document.createElement('button');
+            moreBtn.type = 'button';
+            moreBtn.className = 'ck ck-button ck-button_with-text';
+            moreBtn.setAttribute('aria-label', 'More');
+            moreBtn.setAttribute('title', 'More');
+            moreBtn.setAttribute('aria-expanded', 'false');
+            moreBtn.innerHTML = '<span class="ck-button__label">⋯</span>';
+            if (undoBtn && undoBtn.parentNode) { undoBtn.parentNode.insertBefore(moreBtn, undoBtn); }
+            else { toolbarEl.appendChild(moreBtn); }
+
+            function hidePanels() {
+                morePanel.style.display = 'none';
+                emojiPanel.style.display = 'none';
+                morePanel.setAttribute('aria-hidden', 'true');
+                emojiPanel.setAttribute('aria-hidden', 'true');
+                moreBtn.setAttribute('aria-expanded', 'false');
+            }
+
+            moreBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                hidePanels();
+                var r = moreBtn.getBoundingClientRect();
+
+                // temporarily show to measure width
+                morePanel.style.display = 'block';
+                var width = morePanel.offsetWidth || 200;
+                morePanel.style.display = 'none';
+
+                morePanel.style.top  = (r.bottom + 4) + 'px';
+                morePanel.style.left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8)) + 'px';
+                morePanel.style.display = 'block';
+                morePanel.setAttribute('aria-hidden', 'false');
+                moreBtn.setAttribute('aria-expanded', 'true');
+                var firstBtn = morePanel.querySelector('button');
+                if (firstBtn) firstBtn.focus();
+            });
+
+            morePanel.addEventListener('click', function (e) {
+                var btn = e.target.closest('button'); if (!btn) return;
+                if (btn.dataset.action === 'emoji') {
+                    hidePanels();
+                    var r = btn.getBoundingClientRect();
+
+                    // temporarily show to measure width
+                    emojiPanel.style.display = 'block';
+                    var width = emojiPanel.offsetWidth || 300;
+                    emojiPanel.style.display = 'none';
+
+                    emojiPanel.style.top  = r.top + 'px';
+                    emojiPanel.style.left = Math.min(r.right + 4, window.innerWidth - width - 8) + 'px';
+                    emojiPanel.style.display = 'block';
+                    emojiPanel.setAttribute('aria-hidden', 'false');
+                    var eb = emojiPanel.querySelector('button');
+                    if (eb) eb.focus();
+
+                } else if (btn.dataset.action === 'dark') {
+                    editorCard.classList.toggle('editor-dark');
+                    localStorage.setItem(THEME_KEY, editorCard.classList.contains('editor-dark') ? 'dark' : 'light');
+                    hidePanels();
                 }
+            });
 
-                let t;
-                editor.model.document.on('change:data', () => {
-                    if (hiddenField) hiddenField.value = editor.getData();
-                    clearTimeout(t);
-                    t = setTimeout(() => {
-                        try {
-                            localStorage.setItem(draftKey, editor.getData());
-                            if (autosaveEl) autosaveEl.textContent = 'Draft: saved locally ✔';
-                        } catch (e) { }
-                    }, 400);
+            emojiPanel.addEventListener('click', function (e) {
+                var button = e.target.closest('button'); if (!button) return;
+                var emoji = button.textContent;
+                editor.editing.view.focus();
+                editor.model.change(function (writer) {
+                    var pos = editor.model.document.selection.getFirstPosition();
+                    writer.insertText(emoji, pos);
                 });
+                hidePanels();
+            });
 
-                // submit -> ensure hidden value + clear draft
-                const form = document.getElementById('blog-entry-form');
-                if (form) {
-                    form.addEventListener('submit', () => {
-                        if (hiddenField) hiddenField.value = editor.getData();
-                        localStorage.removeItem(draftKey);
-                    });
+            document.addEventListener('click', function (e) {
+                if (!morePanel.contains(e.target) && !emojiPanel.contains(e.target) && e.target !== moreBtn) {
+                    hidePanels();
                 }
+            });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hidePanels(); });
 
-                // Free emoji panel
-                const EMOJIS = "😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😇 😍 🤩 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤗 🤔 🤨 😐 😑 😶 🙄 😏 😣 😥 😮 🤐 😯 😪 😫 🥱 😴 😌 🤤 😒 😓 😔 😕 🥲 😬 🤥 😶‍🌫️ 🥹 🥰 😻 👍 👎 👏 🙌 🤝 💪 ✍️ ✅ ❌ ✨ ❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 💯 🔥 🎉 🥳 ⭐".split(' ');
-                emojiPanel.innerHTML = EMOJIS.map(e => `<button type="button" aria-label="${e}">${e}</button>`).join('');
-                emojiBtn.addEventListener('click', () => {
-                    const showing = emojiPanel.style.display === 'block';
-                    emojiPanel.style.display = showing ? 'none' : 'block';
-                    emojiPanel.setAttribute('aria-hidden', showing ? 'true' : 'false');
-                });
-                emojiPanel.addEventListener('click', (ev) => {
-                    const btn = ev.target.closest('button');
-                    if (!btn) return;
-                    const ch = btn.textContent;
-                    editor.model.change(writer => {
-                        editor.model.insertContent(writer.createText(ch), editor.model.document.selection);
-                    });
-                });
-                document.addEventListener('click', (e) => {
-                    if (!emojiPanel.contains(e.target) && !emojiBtn.contains(e.target)) {
-                        emojiPanel.style.display = 'none';
-                        emojiPanel.setAttribute('aria-hidden', 'true');
-                    }
-                });
-            })
-            .catch((err) => console.error(err));
+            // Sync hidden field + autosave
+            var t;
+            editor.model.document.on('change:data', function () {
+                var data = editor.getData();
+                if (hiddenField) hiddenField.value = data;
+                clearTimeout(t);
+                t = setTimeout(function () {
+                    try {
+                        localStorage.setItem(draftKey, data);
+                        if (autosaveEl) autosaveEl.textContent = 'Draft: saved locally ✔';
+                    } catch (e) {}
+                }, 400);
+            });
 
-        // Dark toggle
-        darkBtn.addEventListener('click', () => {
-            editorCard.classList.toggle('editor-dark');
-            localStorage.setItem('blog_editor_theme', editorCard.classList.contains('editor-dark') ? 'dark' : 'light');
-            updateDarkButton();
-        });
-        function updateDarkButton() {
-            const dark = editorCard.classList.contains('editor-dark');
-            darkBtn.textContent = dark ? '☀️ Light' : '🌙 Dark';
-            darkBtn.classList.toggle('btn-outline-secondary', !dark);
-            darkBtn.classList.toggle('btn-outline-light', dark);
-        }
+            // Submit: wait for uploads
+            var pending = editor.plugins.get('PendingActions');
+            form.addEventListener('submit', function (e) {
+                if (hiddenField) hiddenField.value = editor.getData();
+                if (pending && pending.hasAny) {
+                    e.preventDefault();
+                    alert('Please wait for uploads to finish…');
+                    return;
+                }
+                localStorage.removeItem(draftKey);
+            });
+        }).catch(function (err) { console.error(err); });
     });
+})();
 </script>
 {% endblock %}

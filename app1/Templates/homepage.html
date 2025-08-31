@@ -426,6 +426,23 @@
     outline: 3px solid color-mix(in oklab, var(--accent-a) 30%, transparent);
     border-radius: 10px;
   }
+
+  .see-more-btn {
+    display: inline-block;
+    background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+    color: #fff;
+    font-weight: 700;
+    padding: .7rem 1.4rem;
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .28);
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+
+  .see-more-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
+  }
 </style>
 
 <!-- HERO -->
@@ -544,9 +561,9 @@
     {% endfor %}
   </div>
 
-<div style="text-align:center; margin-top:2rem;">
-  <a href="{% url 'all_blogs' %}" class="see-more-btn">👀 See More Blogs</a>
-</div>
+  <div style="text-align:center; margin-top:2rem;">
+    <a href="{% url 'all_blogs' %}" class="see-more-btn">👀 See More Blogs</a>
+  </div>
 </section>
 
 <!-- PAGE-SPECIFIC SCRIPTS -->
