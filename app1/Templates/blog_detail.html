@@ -1,508 +1,2176 @@
 {% extends "base.html" %}
 {% block title %}{{ blog.title }}{% endblock %}
-
 {% block pagecontent %}
-<div class="container mt-4" style="max-width: 950px; margin: auto;">
+<!-- ======== READING PROGRESS BAR ======== -->
+<div id="progress-bar" aria-hidden="true"></div>
+<div id="scroll-indicator" class="scroll-indicator"></div>
 
-    <div class="card shadow-lg border-0 p-4"
-         style="border-radius: 14px; background: linear-gradient(to bottom, #ffffff, #f8f9fa);">
-
-        <!-- Blog Title -->
-        <h1 class="text-center mb-3 fw-bold"
-            style="letter-spacing: 1px; font-size: 2rem; color: #222;">
-            {{ blog.title }}
-        </h1>
-
-        <!-- Author & Date -->
-        <p class="text-muted text-center mb-4"
-           style="font-size: 0.95rem; font-style: italic;">
-            ✍ By <strong>
-                {% if blog.author.get_full_name %}{{ blog.author.get_full_name }}{% else %}{{ blog.author.username }}{% endif %}
+<!-- ======== HERO (with blurred background from cover) ======== -->
+<section class="blog-hero {% if blog.image %}has-cover{% endif %}">
+  {% if blog.image %}
+  <div class="hero-bg" style="--hero-url: url('{{ blog.image.url }}');" aria-hidden="true"></div>
+  <div class="hero-particles" id="hero-particles"></div>
+  <div class="hero-gradient-overlay"></div>
+  <img src="{{ blog.image.url }}" alt="" class="hero-visually-hidden" loading="eager" />
+  {% endif %}
+  <div class="hero-inner container">
+    <nav class="breadcrumb-bar" aria-label="Breadcrumb">
+      <a href="{% url 'all_blogs' %}" class="crumb">
+        <span class="icon">🏠</span>
+        <span>All Blogs</span>
+      </a>
+      <span class="sep">/</span>
+      <span class="crumb current" aria-current="page">Detail</span>
+    </nav>
+    <h1 class="blog-title" data-aos="fade-up">
+      {{ blog.title }}
+    </h1>
+    <div class="meta" data-aos="fade-up" data-aos-delay="100">
+      <div class="author-chip">
+        <div class="avatar" aria-hidden="true">
+          <span>
+            {% if blog.author.get_full_name %}
+            {{ blog.author.get_full_name|first }}{{ blog.author.get_full_name|slice:"1:2" }}
+            {% else %}
+            {{ blog.author.username|first }}{{ blog.author.username|slice:"1:2" }}
+            {% endif %}
+          </span>
+        </div>
+        <div class="who-when">
+          <div class="who">
+            <span class="icon">✍</span>
+            <strong>
+              {% if blog.author.get_full_name %}
+              {{ blog.author.get_full_name }}
+              {% else %}
+              {{ blog.author.username }}
+              {% endif %}
             </strong>
-            <span class="mx-2">•</span>
-            📅 {{ blog.created_at|date:"F j, Y" }}
-        </p>
+          </div>
+          <div class="when">
+            <span class="icon">📅</span>
+            <span>{{ blog.created_at|date:"F j, Y" }}</span>
+            <span class="dot">•</span>
+            <span id="reading-time" class="icon">⏱ …</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-bottom-shape"></div>
+</section>
 
-        <!-- Blog Cover Image -->
-        {% if blog.image %}
-            <div class="mb-4 rounded overflow-hidden shadow-sm" style="max-height: 420px;">
-                <img src="{{ blog.image.url }}"
-                     alt="{{ blog.title }}"
-                     class="img-fluid w-100 blog-img"
-                     style="object-fit: cover; transition: transform 0.4s ease;">
+<!-- ======== BODY ======== -->
+<div class="container blog-shell">
+  <div class="row g-4">
+    <!-- CONTENT -->
+    <div class="col-12 col-lg-8">
+      {% if blog.image %}
+      <figure class="cover-card" data-aos="fade-up" data-aos-delay="150">
+        <div class="image-wrapper">
+          <img src="{{ blog.image.url }}" alt="{{ blog.title }}" class="img-fluid w-100" />
+          <div class="image-overlay">
+            <div class="overlay-actions">
+              <button class="zoom-btn" onclick="zoomImage('{{ blog.image.url }}')">
+                <span class="icon">🔍</span>
+              </button>
+              <button class="download-btn" onclick="downloadImage('{{ blog.image.url }}')">
+                <span class="icon">⬇</span>
+              </button>
             </div>
+          </div>
+        </div>
+        <figcaption class="visually-hidden">{{ blog.title }}</figcaption>
+      </figure>
+      {% endif %}
+
+      <article class="reading-box blog-content" id="article" data-aos="fade-up" data-aos-delay="200">
+        {{ blog.content|safe }}
+        <div class="content-clear" aria-hidden="true"></div>
+      </article>
+
+      <!-- ACTIONS -->
+      <div class="actions d-flex flex-column flex-sm-row justify-content-center gap-3 mt-4 pt-3 border-top"
+        data-aos="fade-up" data-aos-delay="250">
+        {% if request.user == blog.author or request.user.is_staff %}
+        <a href="{% url 'blog_edit' blog.id %}" class="btn-modern btn-edit">
+          <span class="icon">✏</span>
+          <span>Edit</span>
+        </a>
+        <form method="POST" action="{% url 'blog_delete' blog.id %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn-modern btn-delete"
+            onclick="return confirm('Are you sure you want to delete this blog?');">
+            <span class="icon">🗑</span>
+            <span>Delete</span>
+          </button>
+        </form>
+        {% endif %}
+        <a href="{% url 'all_blogs' %}" class="btn-modern btn-back">
+          <span class="icon">⬅</span>
+          <span>Back to Blogs</span>
+        </a>
+      </div>
+
+      <!-- REACTIONS -->
+      <div class="reactions-container mt-4" data-aos="fade-up" data-aos-delay="300">
+        <button type="button"
+          class="reaction-btn {% if request.user.is_authenticated and request.user in blog.likes.all %}active{% endif %}"
+          id="like-btn" title="Like this post"
+          aria-pressed="{% if request.user.is_authenticated and request.user in blog.likes.all %}true{% else %}false{% endif %}">
+          <span class="icon heart">❤️</span>
+          <span class="text">Like</span>
+          <span class="badge" id="like-count">{{ blog.likes.count }}</span>
+          <div class="reaction-particles"></div>
+        </button>
+
+        <button type="button"
+          class="reaction-btn {% if request.user.is_authenticated and request.user in blog.bookmarks.all %}active{% endif %}"
+          id="bookmark-btn" title="Save to bookmarks"
+          aria-pressed="{% if request.user.is_authenticated and request.user in blog.bookmarks.all %}true{% else %}false{% endif %}">
+          <span class="icon">🔖</span>
+          <span class="text">Save</span>
+          <div class="reaction-particles"></div>
+        </button>
+
+        <button type="button" class="reaction-btn" id="share-btn" title="Share" onclick="shareBlog()">
+          <span class="icon">🔗</span>
+          <span class="text">Share</span>
+          <div class="reaction-particles"></div>
+        </button>
+      </div>
+
+      <!-- COMMENTS -->
+      <section class="comments mt-5 pt-4 border-top" aria-label="Comments" data-aos="fade-up" data-aos-delay="350">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+          <h4 class="fw-bold mb-0">
+            <span class="icon">💬</span>
+            <span>Comments</span>
+          </h4>
+          <span class="comment-count">{{ blog.comments.count }} comment{{ blog.comments.count|pluralize }}</span>
+        </div>
+
+        {% if request.user.is_authenticated %}
+        <form method="POST" action="{% url 'add_comment' blog.id %}" class="comment-form glass">
+          {% csrf_token %}
+          <div class="form-group">
+            <div class="input-group">
+              <div class="avatar sm">
+                <span>
+                  {% if request.user.get_full_name %}
+                  {{ request.user.get_full_name|first }}{{ request.user.get_full_name|slice:"1:2" }}
+                  {% else %}
+                  {{ request.user.username|first }}{{ request.user.username|slice:"1:2" }}
+                  {% endif %}
+                </span>
+              </div>
+              <textarea name="content" class="form-control rounded-3 shadow-sm" rows="3"
+                placeholder="Write your comment..." required></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary fw-semibold shadow-sm w-100 mt-2">
+            <span class="icon">📝</span>
+            <span>Post Comment</span>
+          </button>
+        </form>
+        {% else %}
+        <div class="login-prompt glass">
+          <p class="text-muted">
+            <span class="icon">🔒</span>
+            <span>Please <a href="{% url 'login' %}">login</a> to comment.</span>
+          </p>
+        </div>
         {% endif %}
 
-        <!-- Blog Content -->
-        <!-- Ensure saved HTML is rendered; place a clearfix after content -->
-        <div class="p-4 rounded shadow-sm reading-box mb-4 blog-content"
-             style="background: #ffffff; border: 1px solid #e9ecef; line-height: 1.8; font-size: 1.05rem; color: #333; text-align: justify;">
-            {{ blog.content|safe }}
-            <div class="content-clear" aria-hidden="true" style="clear: both;"></div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="d-flex flex-column flex-sm-row justify-content-center gap-3 mt-5 pt-3 border-top">
-            {% if request.user == blog.author or request.user.is_staff %}
-                <a href="{% url 'blog_edit' blog.id %}" class="btn btn-warning px-4 fw-semibold shadow-sm">
-                    ✏ Edit
-                </a>
-                <form method="POST" action="{% url 'blog_delete' blog.id %}" style="display:inline;">
+        <div class="comment-list mt-4">
+          {% for comment in blog.comments.all %}
+          <div class="comment-box glass" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:100 }}">
+            <div class="d-flex gap-3">
+              <div class="avatar sm" aria-hidden="true">
+                <span>
+                  {% if comment.user.get_full_name %}
+                  {{ comment.user.get_full_name|first }}{{ comment.user.get_full_name|slice:"1:2" }}
+                  {% else %}
+                  {{ comment.user.username|first }}{{ comment.user.username|slice:"1:2" }}
+                  {% endif %}
+                </span>
+              </div>
+              <div class="flex-grow-1">
+                <div class="comment-header">
+                  <div class="comment-author">
+                    <strong>
+                      {% if comment.user.get_full_name %}{{ comment.user.get_full_name }}{% else %}{{
+                      comment.user.username }}{% endif %}
+                    </strong>
+                    <span class="comment-date">{{ comment.created_at|date:"M j, Y H:i" }}</span>
+                  </div>
+                  {% if request.user.is_staff %}
+                  <form method="POST" action="{% url 'delete_comment' comment.id %}" class="d-inline">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger px-4 fw-semibold shadow-sm"
-                            onclick="return confirm('Are you sure you want to delete this blog?');">
-                        🗑 Delete
+                    <button type="submit" class="btn btn-sm btn-danger shadow-sm"
+                      onclick="return confirm('Delete this comment?');">
+                      <span class="icon">🗑</span>
                     </button>
-                </form>
-            {% endif %}
-            <a href="{% url 'all_blogs' %}" class="btn btn-secondary px-4 fw-semibold shadow-sm">
-                ⬅ Back to Blogs
-            </a>
-        </div>
-
-        <!-- Reactions (Like / Save / Share) -->
-        <div class="d-flex justify-content-center flex-wrap gap-3 mt-4">
-            <!-- Like -->
-            <button type="button"
-                    class="btn btn-outline-danger shadow-sm d-flex align-items-center gap-2 reaction-btn {% if request.user.is_authenticated and request.user in blog.likes.all %}active{% endif %}"
-                    id="like-btn"
-                    aria-pressed="{% if request.user.is_authenticated and request.user in blog.likes.all %}true{% else %}false{% endif %}">
-                <span class="fs-5">❤️</span><span>Like</span>
-                <span class="badge bg-light text-danger border ms-1" id="like-count">{{ blog.likes.count }}</span>
-            </button>
-
-            <!-- Save -->
-            <button type="button"
-                    class="btn btn-outline-secondary shadow-sm d-flex align-items-center gap-2 reaction-btn {% if request.user.is_authenticated and request.user in blog.bookmarks.all %}active{% endif %}"
-                    id="bookmark-btn"
-                    aria-pressed="{% if request.user.is_authenticated and request.user in blog.bookmarks.all %}true{% else %}false{% endif %}">
-                <span class="fs-5">🔖</span><span>Save</span>
-            </button>
-
-            <!-- Share -->
-            <button type="button" class="btn btn-outline-primary shadow-sm d-flex align-items-center gap-2 reaction-btn" id="share-btn" onclick="shareBlog()">
-                <span class="fs-5">🔗</span><span>Share</span>
-            </button>
-        </div>
-
-        <!-- Comment Section -->
-        <div class="mt-5 pt-4 border-top">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h4 class="fw-bold mb-0">💬 Comments</h4>
-                <span class="text-muted small">Total: {{ blog.comments.count }}</span>
-            </div>
-
-            <!-- Comment Form -->
-            {% if request.user.is_authenticated %}
-            <form method="POST" action="{% url 'add_comment' blog.id %}">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label for="id_content" class="form-label">Add a comment</label>
-                    <textarea id="id_content" name="content" class="form-control shadow-sm" rows="3" placeholder="Write your comment..." required></textarea>
+                  </form>
+                  {% endif %}
                 </div>
-                <button type="submit" class="btn btn-primary fw-semibold shadow-sm">Post Comment</button>
-            </form>
-            {% else %}
-            <p class="text-muted">🔒 Please <a href="{% url 'login' %}">login</a> to leave a comment.</p>
-            {% endif %}
-
-            <!-- List of Comments -->
-            <div class="mt-4">
-                {% for comment in blog.comments.all %}
-                    <div class="p-3 mb-3 border rounded shadow-sm bg-white comment-box">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <p class="mb-1">
-                                <strong>
-                                  {% if comment.user.get_full_name %}{{ comment.user.get_full_name }}{% else %}{{ comment.user.username }}{% endif %}
-                                </strong>
-                                <small class="text-muted">• {{ comment.created_at|date:"M j, Y H:i" }}</small>
-                            </p>
-
-                            {% if request.user.is_staff %}
-                                <form method="POST" action="{% url 'delete_comment' comment.id %}" style="display:inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger shadow-sm"
-                                        onclick="return confirm('Are you sure you want to delete this comment?');">
-                                        🗑 Delete
-                                    </button>
-                                </form>
-                            {% endif %}
-                        </div>
-                        <p class="mb-0" style="white-space: pre-line;">{{ comment.content }}</p>
-                    </div>
-                {% empty %}
-                    <p class="text-muted fst-italic">No comments yet. Be the first to comment!</p>
-                {% endfor %}
+                <div class="comment-text">{{ comment.content }}</div>
+                <div class="comment-actions">
+                  <button class="comment-action-btn">
+                    <span class="icon">👍</span>
+                    <span>Like</span>
+                  </button>
+                  <button class="comment-action-btn">
+                    <span class="icon">💬</span>
+                    <span>Reply</span>
+                  </button>
+                </div>
+              </div>
             </div>
+          </div>
+          {% empty %}
+          <div class="no-comments glass text-center py-4">
+            <p class="text-muted fst-italic">
+              <span class="icon">💭</span>
+              <span>No comments yet. Be the first!</span>
+            </p>
+          </div>
+          {% endfor %}
         </div>
-
+      </section>
     </div>
+
+    <!-- SIDEBAR -->
+    <aside class="col-12 col-lg-4" aria-label="On this page">
+      <div class="toc-card glass" data-aos="fade-left" data-aos-delay="200">
+        <div class="toc-head d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">
+            <span class="icon">📋</span>
+            <span>On this page</span>
+          </h6>
+          <button class="btn btn-sm btn-outline-secondary d-lg-none" id="toc-toggle" aria-expanded="false"
+            aria-controls="toc-list">
+            <span class="icon">☰</span>
+          </button>
+        </div>
+        <nav id="toc-list" class="toc-list mt-2"></nav>
+      </div>
+
+      <div class="info-card glass mt-3" data-aos="fade-left" data-aos-delay="300">
+        <h6 class="mb-3">
+          <span class="icon">📤</span>
+          <span>Share this article</span>
+        </h6>
+        <p class="small text-muted mb-3">Love it? Share with friends:</p>
+        <div class="share-buttons d-flex gap-2 flex-wrap">
+          <a class="share-btn share-twitter" target="_blank" rel="noopener" id="share-twitter">
+            <span class="icon">𝕏</span>
+            <span>Twitter</span>
+          </a>
+          <a class="share-btn share-whatsapp" target="_blank" rel="noopener" id="share-whatsapp">
+            <span class="icon">💬</span>
+            <span>WhatsApp</span>
+          </a>
+          <a class="share-btn share-telegram" target="_blank" rel="noopener" id="share-telegram">
+            <span class="icon">✈️</span>
+            <span>Telegram</span>
+          </a>
+          <button class="share-btn share-copy" id="btn-copy-link">
+            <span class="icon">📋</span>
+            <span>Copy Link</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="tags-card glass mt-3" data-aos="fade-left" data-aos-delay="400">
+        <h6 class="mb-3">
+          <span class="icon">🏷️</span>
+          <span>Tags</span>
+        </h6>
+        <div class="tag-cloud">
+          {% if blog.tags.all %}
+          {% for tag in blog.tags.all %}
+          <a href="#" class="tag">{{ tag.name }}</a>
+          {% endfor %}
+          {% else %}
+          <p class="text-muted small">No tags available</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="related-card glass mt-3" data-aos="fade-left" data-aos-delay="500">
+        <h6 class="mb-3">
+          <span class="icon">📚</span>
+          <span>Related Articles</span>
+        </h6>
+        <div class="related-articles">
+          <!-- This would be populated with related articles in a real implementation -->
+          <div class="related-article">
+            <div class="related-thumb"></div>
+            <div class="related-info">
+              <h7>How to Improve Your Blog</h7>
+              <span class="related-date">May 15, 2023</span>
+            </div>
+          </div>
+          <div class="related-article">
+            <div class="related-thumb"></div>
+            <div class="related-info">
+              <h7>10 Tips for Better Writing</h7>
+              <span class="related-date">Apr 28, 2023</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="newsletter-card glass mt-3" data-aos="fade-left" data-aos-delay="600">
+        <h6 class="mb-3">
+          <span class="icon">📧</span>
+          <span>Subscribe to Newsletter</span>
+        </h6>
+        <p class="small text-muted mb-3">Get the latest posts delivered right to your inbox.</p>
+        <form class="newsletter-form">
+          <div class="input-group">
+            <input type="email" class="form-control" placeholder="Your email address" required>
+            <button class="btn btn-primary" type="submit">Subscribe</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="author-card glass mt-3" data-aos="fade-left" data-aos-delay="700">
+        <h6 class="mb-3">
+          <span class="icon">👤</span>
+          <span>About the Author</span>
+        </h6>
+        <div class="author-info">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="avatar">
+              <span>
+                {% if blog.author.get_full_name %}
+                {{ blog.author.get_full_name|first }}{{ blog.author.get_full_name|slice:"1:2" }}
+                {% else %}
+                {{ blog.author.username|first }}{{ blog.author.username|slice:"1:2" }}
+                {% endif %}
+              </span>
+            </div>
+            <div>
+              <h6 class="mb-0">
+                {% if blog.author.get_full_name %}
+                {{ blog.author.get_full_name }}
+                {% else %}
+                {{ blog.author.username }}
+                {% endif %}
+              </h6>
+              <p class="text-muted small mb-0">Content Creator</p>
+            </div>
+          </div>
+          <p class="small text-muted">
+            Passionate writer and blogger sharing insights on various topics.
+            Follow for more amazing content!
+          </p>
+      
+        </div>
+      </div>
+    </aside>
+  </div>
 </div>
 
-<style>
-  /* ---------------------------------------------------------------------------
-     Global & small visual niceties
-     --------------------------------------------------------------------------- */
-  body { -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
-  .card { animation: fadeInUp 0.6s ease-out; border-radius: 14px; }
-  @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  .blog-img { transition: transform 0.35s ease, box-shadow 0.35s ease; border-radius: 10px; }
-  .blog-img:hover { transform: scale(1.03); box-shadow: 0 10px 25px rgba(0,0,0,0.12); }
+<!-- ======== IMAGE ZOOM MODAL ======== -->
+<div id="image-zoom-modal" class="image-zoom-modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeZoomModal()">&times;</span>
+    <img id="zoomed-image" src="" alt="" />
+    <div class="modal-actions">
+      <button class="modal-action-btn" onclick="rotateImage()">
+        <span class="icon">🔄</span>
+      </button>
+      <button class="modal-action-btn" onclick="downloadZoomedImage()">
+        <span class="icon">⬇</span>
+      </button>
+    </div>
+  </div>
+</div>
 
-  /* ---------------------------------------------------------------------------
-     Reading box / content (modernized)
-     --------------------------------------------------------------------------- */
-  .reading-box {
-    border-radius: 16px;
-    background: #fff;
-    border: 1px solid #e9ecef;
-    padding: clamp(1rem, 3vw, 2rem);
-    font-size: clamp(1rem, 1.05rem + 0.2vw, 1.15rem);
-    line-height: 1.85;
-    color: #222;
-    letter-spacing: 0.2px;
-    text-align: left;
+<!-- ======== FLOATING ACTION BUTTON ======== -->
+<div class="fab-container">
+  <button class="fab main-fab" onclick="toggleFabMenu()">
+    <span class="icon">+</span>
+  </button>
+  <div class="fab-menu">
+    <button class="fab-item" onclick="scrollToTop()" title="Scroll to top">
+      <span class="icon">↑</span>
+    </button>
+    <button class="fab-item" onclick="toggleDarkMode()" title="Toggle dark mode">
+      <span class="icon">🌓</span>
+    </button>
+    <button class="fab-item" onclick="window.print()" title="Print article">
+      <span class="icon">🖨️</span>
+    </button>
+    <button class="fab-item" onclick="toggleReaderMode()" title="Reader mode">
+      <span class="icon">📖</span>
+    </button>
+  </div>
+</div>
+
+<!-- ======== STYLES ======== -->
+<style>
+  /* ---------- Fallback tokens if base variables missing ---------- */
+  :root {
+    --accent-a: var(--accent-a, #6a11cb);
+    --accent-b: var(--accent-b, #2575fc);
+    --accent-c: var(--accent-c, #8e2de2);
+    --accent-d: var(--accent-d, #ff6ec7);
+    --accent-e: var(--accent-e, #ff9a8b);
+    --card-radius: var(--card-radius, 20px);
+    --glass-border: var(--glass-border, rgba(255, 255, 255, .22));
+    --content-bg: var(--content-bg, rgba(255, 255, 255, .78));
+    --text: var(--text, #222);
+    --text-muted: var(--text-muted, #6c757d);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, .06);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, .08);
+    --shadow-lg: 0 12px 34px rgba(0, 0, 0, .12);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, .15);
+    --shadow-neumorphism: inset 2px 2px 5px rgba(255, 255, 255, 0.7),
+      inset -2px -2px 5px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s cubic-bezier(.4, 0, .2, 1);
+    --gradient-1: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+    --gradient-2: linear-gradient(135deg, var(--accent-b), var(--accent-c));
+    --gradient-3: linear-gradient(135deg, var(--accent-c), var(--accent-d));
+    --gradient-4: linear-gradient(135deg, var(--accent-d), var(--accent-e));
+    --gradient-5: linear-gradient(135deg, var(--accent-e), var(--accent-a));
   }
 
-  /* Drop cap for first paragraph — keeps classic look but modern */
-  .reading-box p:first-of-type::first-letter {
-    font-size: 3rem;
+  /* Dark mode adjustments */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --content-bg: rgba(30, 30, 40, 0.8);
+      --glass-border: rgba(255, 255, 255, .12);
+      --text: #f0f0f0;
+      --text-muted: #a0a0b0;
+    }
+  }
+
+  body.dark-mode {
+    --content-bg: rgba(30, 30, 40, 0.8);
+    --glass-border: rgba(255, 255, 255, .12);
+    --text: #f0f0f0;
+    --text-muted: #a0a0b0;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(var(--accent-a), var(--accent-b), var(--accent-c));
+    border-radius: 5px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(var(--accent-b), var(--accent-c), var(--accent-d));
+  }
+
+  /* Progress bar */
+  #progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent-a), var(--accent-b), var(--accent-c), var(--accent-d), var(--accent-e));
+    width: 0%;
+    z-index: 2000;
+    transition: width .2s ease;
+    box-shadow: 0 2px 8px rgba(106, 17, 203, 0.4);
+  }
+
+  .scroll-indicator {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 6px;
+    height: 0%;
+    background: linear-gradient(to bottom, var(--accent-a), var(--accent-b), var(--accent-c), var(--accent-d), var(--accent-e));
+    z-index: 2000;
+    transition: height .2s ease;
+    border-radius: 6px 0 0 6px;
+    box-shadow: 0 0 10px rgba(106, 17, 203, 0.4);
+  }
+
+  /* HERO */
+  .blog-hero {
+    position: relative;
+    padding: 56px 0 24px;
+    overflow: hidden;
+  }
+
+  .blog-hero.has-cover {
+    padding: 84px 0 32px;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+  }
+
+  .blog-hero .hero-bg {
+    position: absolute;
+    inset: 0;
+    background-image: var(--hero-url);
+    background-size: cover;
+    background-position: center;
+    filter: blur(24px) saturate(1.1) brightness(0.9);
+    transform: scale(1.08);
+    will-change: transform;
+    transition: transform 8s ease-out;
+  }
+
+  .blog-hero:hover .hero-bg {
+    transform: scale(1.12);
+  }
+
+  .hero-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .hero-gradient-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(106, 17, 203, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(37, 117, 252, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(142, 45, 226, 0.2) 0%, transparent 50%);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .particle {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+
+  .blog-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(1200px 400px at 50% 0%, rgba(255, 255, 255, .55), rgba(255, 255, 255, .75)),
+      linear-gradient(to bottom, rgba(255, 255, 255, .35), rgba(255, 255, 255, 1) 60%);
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .hero-bottom-shape {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120'%3E%3Cpath fill='%23ffffff' fill-opacity='1' d='M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z'%3E%3C/path%3E%3C/svg%3E") no-repeat bottom center;
+    background-size: cover;
+    z-index: 4;
+  }
+
+  .blog-hero .hero-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    clip: rect(0 0 0 0);
+    overflow: hidden;
+  }
+
+  .blog-hero .hero-inner {
+    position: relative;
+    z-index: 5;
+  }
+
+  .breadcrumb-bar {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .75rem;
+    font-size: .9rem;
+  }
+
+  .breadcrumb-bar .crumb {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: var(--transition);
+    padding: 0.3rem 0.6rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+  }
+
+  .breadcrumb-bar .crumb:hover {
+    color: var(--accent-b);
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+
+  .breadcrumb-bar .sep {
+    color: var(--text-muted);
+  }
+
+  .blog-title {
+    font-size: clamp(1.7rem, 4vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+    text-wrap: balance;
+    background: linear-gradient(90deg, var(--accent-a), var(--accent-b), var(--accent-c), var(--accent-d), var(--accent-e));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+    text-shadow: 0 2px 10px rgba(106, 17, 203, 0.3);
+  }
+
+  .meta .author-chip {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    padding: 0.5rem 1rem;
+    background: var(--content-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-neumorphism);
+    width: fit-content;
+    transition: var(--transition);
+  }
+
+  .meta .author-chip:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--gradient-1);
+    display: grid;
+    place-items: center;
+    color: #fff;
     font-weight: 700;
-    color: #007bff;
+    box-shadow: var(--shadow-neumorphism);
+    transition: var(--transition);
+  }
+
+  .avatar:hover {
+    transform: scale(1.05);
+  }
+
+  .avatar.sm {
+    width: 36px;
+    height: 36px;
+    font-size: .85rem;
+  }
+
+  .who-when .who {
+    font-size: .95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .who-when .when {
+    color: var(--text-muted);
+    font-size: .85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .when .dot {
+    margin: 0 .4rem;
+    color: var(--text-muted);
+  }
+
+  /* SHELL */
+  .blog-shell {
+    margin-top: 10px;
+  }
+
+  /* Cover card under the hero */
+  .cover-card {
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-neumorphism);
+    transition: var(--transition);
+    position: relative;
+  }
+
+  .cover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .image-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--card-radius);
+  }
+
+  .cover-card img {
+    border-radius: var(--card-radius);
+    max-height: 460px;
+    object-fit: cover;
+    width: 100%;
+    transition: var(--transition);
+  }
+
+  .cover-card:hover img {
+    transform: scale(1.02);
+  }
+
+  .image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 20px;
+    opacity: 0;
+    transition: var(--transition);
+  }
+
+  .cover-card:hover .image-overlay {
+    opacity: 1;
+  }
+
+  .overlay-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .zoom-btn,
+  .download-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-neumorphism);
+  }
+
+  .zoom-btn:hover,
+  .download-btn:hover {
+    transform: scale(1.1);
+    background: white;
+  }
+
+  /* Reading box */
+  .reading-box {
+    border-radius: var(--card-radius);
+    background: var(--content-bg);
+    border: 1px solid var(--glass-border);
+    padding: clamp(1.5rem, 2.2vw, 2.5rem);
+    line-height: 1.85;
+    font-size: 1.05rem;
+    color: var(--text);
+    box-shadow: var(--shadow-neumorphism);
+    scroll-margin-top: 88px;
+    backdrop-filter: blur(10px);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .reading-box::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-1);
+    box-shadow: 0 0 10px rgba(106, 17, 203, 0.5);
+  }
+
+  .reading-box:hover {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .reading-box p:first-of-type::first-letter {
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: var(--accent-a);
     float: left;
     margin-right: 8px;
     line-height: 1;
   }
 
-  /* Headings inside saved HTML */
+  /* Typography inside content */
   .blog-content h2 {
-    font-size: 1.6rem;
+    font-size: clamp(1.3rem, 2.2vw, 1.7rem);
     margin: 2rem 0 1rem;
-    font-weight: 700;
-    color: #1e1e1e;
+    font-weight: 800;
     position: relative;
+    color: var(--text);
   }
+
   .blog-content h2::after {
     content: "";
-    display: block;
-    width: 52px;
+    width: 56px;
     height: 4px;
-    background: linear-gradient(90deg, #007bff, #00c6ff);
+    display: block;
     margin-top: 8px;
     border-radius: 3px;
-    opacity: 0.95;
-  }
-  .blog-content h3 {
-    font-size: 1.3rem;
-    margin: 1.5rem 0 0.8rem;
-    font-weight: 600;
-    color: #333;
+    background: var(--gradient-1);
+    box-shadow: 0 0 10px rgba(106, 17, 203, 0.3);
   }
 
-  /* Links */
+  .blog-content h3 {
+    font-size: clamp(1.15rem, 1.8vw, 1.35rem);
+    margin: 1.5rem 0 .8rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
   .blog-content a {
-    color: #007bff;
+    color: var(--accent-b);
     font-weight: 600;
     text-decoration: none;
-    border-bottom: 2px solid rgba(0, 123, 255, 0.18);
-    transition: color .18s ease, border-color .18s ease;
+    border-bottom: 2px solid color-mix(in oklab, var(--accent-b) 25%, transparent);
+    transition: var(--transition);
   }
-  .blog-content a:hover { color: #0056b3; border-color: rgba(0,86,179,0.35); text-decoration: none; }
 
-  /* Lists */
-  .blog-content ul { margin: 1rem 0; padding-left: 1.4rem; }
-  .blog-content ul li { margin-bottom: 0.6rem; }
-  .blog-content ul li::marker { color: #007bff; font-weight: 700; }
+  .blog-content a:hover {
+    border-color: color-mix(in oklab, var(--accent-b) 50%, transparent);
+  }
 
-  /* Blockquotes / Pull quotes */
-  .blog-content blockquote {
-    margin: 1.5rem 0;
-    padding: 1.2rem 1.5rem;
-    border-left: 5px solid #007bff;
-    background: #f8faff;
-    font-style: italic;
-    font-size: 1.05rem;
-    border-radius: 8px;
-    color: #444;
+  .blog-content ul {
+    margin: 1rem 0;
+    padding-left: 1.2rem;
+  }
+
+  .blog-content ul li {
+    margin-bottom: .55rem;
     position: relative;
   }
-  .blog-content blockquote::before {
-    content: "❝";
-    font-size: 2rem;
-    color: #007bff;
-    position: absolute;
-    left: 10px;
-    top: -12px;
+
+  .blog-content ul li::marker {
+    color: var(--accent-b);
+    font-weight: 700;
   }
 
-  /* Figures & captions (handles CKEditor/Editor HTML) */
-  .blog-content figure { margin: 1.8rem auto; text-align: center; }
-  .blog-content figure img {
-    max-width: 100%;
-    border-radius: 12px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-    display: block;
-    margin: 0 auto;
-  }
-  .blog-content figure figcaption {
-    margin-top: 0.5rem;
-    font-size: 0.92rem;
-    color: #666;
+  .blog-content blockquote {
+    margin: 1.6rem 0;
+    padding: 1.1rem 1.3rem;
+    border-left: 5px solid var(--accent-b);
+    background: color-mix(in oklab, var(--accent-b) 10%, var(--content-bg));
     font-style: italic;
+    border-radius: 10px;
+    color: var(--text);
+    box-shadow: var(--shadow-neumorphism);
   }
 
-  /* Code styling */
   .blog-content pre {
     background: #0f1724;
     color: #e6eef8;
     padding: 1rem;
     border-radius: 10px;
-    overflow-x: auto;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Fira Code", "Courier New", monospace;
-    font-size: 0.95rem;
-    margin: 1rem 0;
-  }
-  .blog-content code { background: #f1f1f1; padding: 2px 6px; border-radius: 6px; font-family: monospace; font-size: 0.95rem; }
-
-  /* comment card */
-  .comment-box { border-radius: 12px; background: #fafafa; border: 1px solid #eaeaea; }
-
-  /* reaction buttons */
-  .reaction-btn { transition: transform 0.15s ease, box-shadow 0.2s ease; border-radius: 999px; }
-  .reaction-btn:hover { transform: translateY(-1px); }
-  #like-btn.active { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; box-shadow: 0 .5rem 1rem rgba(220,53,69,.12); }
-  #bookmark-btn.active { background-color: #6c757d !important; color: #fff !important; border-color: #6c757d !important; box-shadow: 0 .5rem 1rem rgba(108,117,125,.12); }
-
-  /* ---------------------------------------------------------------------------
-     IMAGE + FIGURE + ALIGNMENT RULES (keeps editor output solid)
-     --------------------------------------------------------------------------- */
-  /* base responsive behavior */
-  .blog-content img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); display: inline-block; }
-
-  /* inline float styles (editor sometimes writes style="float:left") */
-  .blog-content img[style*="float:left"], .blog-content img[style*="float: left"] {
-    float: left; margin: 10px 20px 10px 0; max-width: 45%;
-  }
-  .blog-content img[style*="float:right"], .blog-content img[style*="float: right"] {
-    float: right; margin: 10px 0 10px 20px; max-width: 45%;
+    overflow: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Fira Code", monospace;
+    box-shadow: var(--shadow-neumorphism);
   }
 
-  /* centered inline images (editor may set display:block;margin:auto) */
-  .blog-content img[style*="display:block"], .blog-content img[style*="margin-left:auto"], .blog-content img[style*="margin-right:auto"] {
-    display: block; margin: 12px auto; max-width: 90%;
+  .blog-content code {
+    background: color-mix(in oklab, var(--accent-b) 15%, var(--content-bg));
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-family: monospace;
+    color: var(--text);
   }
 
-  /* common alignment classes */
-  .blog-content img.alignleft, .blog-content img.align-left, .blog-content img.alignLeft { float: left; margin: 10px 20px 10px 0; max-width: 45%; }
-  .blog-content img.alignright, .blog-content img.align-right, .blog-content img.alignRight { float: right; margin: 10px 0 10px 20px; max-width: 45%; }
-  .blog-content img.aligncenter, .blog-content img.align-center, .blog-content img.alignCenter { display: block; margin: 12px auto; max-width: 90%; }
+  /* Images / figures */
+  .blog-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: var(--shadow-neumorphism);
+    transition: var(--transition);
+    cursor: pointer;
+  }
 
-  /* figure wrappers (CKEditor outputs <figure class="image image-style-align-left">) */
-  .blog-content figure.image { margin: 16px 0; text-align: center; }
-  .blog-content figure.image img { display: block; margin: 0 auto; max-width: 90%; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
-  .blog-content figure.image.image-style-align-left, .blog-content figure.image.image-style-left, .blog-content figure.image.align-left { float:left; margin:10px 20px 10px 0; max-width:45%; }
-  .blog-content figure.image.image-style-align-right, .blog-content figure.image.image-style-right, .blog-content figure.image.align-right { float:right; margin:10px 0 10px 20px; max-width:45%; }
-  .blog-content figure.image.image-style-align-center, .blog-content figure.image.image-style-center, .blog-content figure.image.align-center { display:block; margin:12px auto; max-width:90%; text-align:center; }
+  .blog-content img:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-lg);
+  }
 
-  .blog-content figure.image figcaption { font-size: 0.9rem; color: #6c757d; margin-top: 6px; }
+  .blog-content figure {
+    margin: 1.6rem auto;
+    text-align: center;
+  }
 
-  /* clear floats */
-  .blog-content .content-clear { clear: both; height: 0; line-height: 0; font-size: 0; }
+  .blog-content figure figcaption {
+    margin-top: .5rem;
+    font-size: .92rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
 
-  /* mobile: stacked images (disable float to avoid squeezed text) */
+  .blog-content .content-clear {
+    clear: both;
+    height: 0;
+  }
+
+  /* Floats from editor */
+  .blog-content img[style*="float:left"],
+  .blog-content img[style*="float: left"] {
+    float: left;
+    margin: 10px 20px 10px 0;
+    max-width: 45%;
+  }
+
+  .blog-content img[style*="float:right"],
+  .blog-content img[style*="float: right"] {
+    float: right;
+    margin: 10px 0 10px 20px;
+    max-width: 45%;
+  }
+
+  .blog-content figure.image.image-style-align-left {
+    float: left;
+    margin: 10px 20px 10px 0;
+    max-width: 45%;
+  }
+
+  .blog-content figure.image.image-style-align-right {
+    float: right;
+    margin: 10px 0 10px 20px;
+    max-width: 45%;
+  }
+
+  .blog-content figure.image.image-style-align-center {
+    display: block;
+    margin: 12px auto;
+    max-width: 90%;
+  }
+
+  /* Action buttons */
+  .btn-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+    box-shadow: var(--shadow-neumorphism);
+    border: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-modern::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.3), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+
+  .btn-modern:hover::before {
+    transform: translateX(100%);
+  }
+
+  .btn-modern:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-modern .icon {
+    font-size: 1.1rem;
+  }
+
+  .btn-edit {
+    background: var(--gradient-1);
+    color: white;
+  }
+
+  .btn-delete {
+    background: var(--gradient-2);
+    color: white;
+  }
+
+  .btn-back {
+    background: var(--gradient-3);
+    color: white;
+  }
+
+  /* Reactions */
+  .reactions-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .reaction-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    background: var(--content-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text);
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-neumorphism);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .reaction-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .reaction-btn:active {
+    transform: translateY(-1px);
+  }
+
+  .reaction-btn .icon {
+    font-size: 1.2rem;
+    transition: var(--transition);
+  }
+
+  .reaction-btn .text {
+    font-weight: 500;
+  }
+
+  .reaction-btn .badge {
+    background: var(--content-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  #like-btn.active {
+    background: var(--gradient-2);
+    color: white;
+    border: none;
+    box-shadow: 0 8px 24px rgba(239, 68, 68, .25);
+  }
+
+  #like-btn.active .heart {
+    animation: heart-pop 0.5s ease;
+  }
+
+  @keyframes heart-pop {
+    0% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.3);
+    }
+
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  #bookmark-btn.active {
+    background: var(--gradient-3);
+    color: white;
+    border: none;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, .25);
+  }
+
+  .reaction-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .reaction-particle {
+    position: absolute;
+    background: currentColor;
+    border-radius: 50%;
+    opacity: 0;
+  }
+
+  /* Comments */
+  .comment-count {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    background: var(--content-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    padding: 0.3rem 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .comment-form,
+  .login-prompt {
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .input-group {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+  }
+
+  .comment-box {
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    transition: var(--transition);
+  }
+
+  .comment-box:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .comment-author {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .comment-date {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-left: 0.5rem;
+  }
+
+  .comment-text {
+    color: var(--text);
+    white-space: pre-line;
+    line-height: 1.6;
+  }
+
+  .comment-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .comment-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .comment-action-btn:hover {
+    color: var(--accent-b);
+  }
+
+  .no-comments {
+    border-radius: var(--card-radius);
+  }
+
+  /* Glass helpers */
+  .glass {
+    background: var(--content-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-neumorphism);
+    border-radius: var(--card-radius);
+    backdrop-filter: blur(10px);
+    transition: var(--transition);
+  }
+
+  /* TOC */
+  .toc-card {
+    padding: 1.2rem;
+    position: sticky;
+    top: 80px;
+  }
+
+  .toc-head h6 {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .toc-list {
+    max-height: 50vh;
+    overflow: auto;
+    padding-left: 0.25rem;
+  }
+
+  .toc-list ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+  }
+
+  .toc-list li {
+    margin-bottom: 0.3rem;
+  }
+
+  .toc-list a {
+    display: block;
+    font-size: .95rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: var(--text);
+    text-decoration: none;
+    transition: var(--transition);
+  }
+
+  .toc-list a:hover {
+    background: rgba(99, 102, 241, .08);
+    color: var(--accent-b);
+    transform: translateX(5px);
+  }
+
+  .toc-list a.active {
+    background: rgba(99, 102, 241, .15);
+    color: var(--accent-b);
+    font-weight: 700;
+  }
+
+  /* Social share card */
+  .info-card {
+    padding: 1.2rem;
+  }
+
+  .info-card h6 {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .share-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .share-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: var(--transition);
+  }
+
+  .share-btn:hover {
+    transform: translateY(-3px);
+  }
+
+  .share-btn .icon {
+    font-size: 1rem;
+  }
+
+  .share-twitter {
+    background: #1DA1F2;
+    color: white;
+  }
+
+  .share-whatsapp {
+    background: #25D366;
+    color: white;
+  }
+
+  .share-telegram {
+    background: #0088CC;
+    color: white;
+  }
+
+  .share-copy {
+    background: var(--content-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text);
+  }
+
+  /* Tags card */
+  .tags-card {
+    padding: 1.2rem;
+  }
+
+  .tags-card h6 {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    background: rgba(99, 102, 241, .1);
+    color: var(--accent-b);
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: var(--transition);
+  }
+
+  .tag:hover {
+    background: rgba(99, 102, 241, .2);
+    transform: translateY(-2px);
+  }
+
+  /* Related articles */
+  .related-card {
+    padding: 1.2rem;
+  }
+
+  .related-card h6 {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .related-article {
+    display: flex;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .related-article:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .related-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    background: var(--gradient-1);
+    flex-shrink: 0;
+  }
+
+  .related-info {
+    flex: 1;
+  }
+
+  .related-info h7 {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    color: var(--text);
+  }
+
+  .related-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  /* Newsletter card */
+  .newsletter-card {
+    padding: 1.2rem;
+  }
+
+  .newsletter-card h6 {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .newsletter-form .input-group {
+    display: flex;
+    gap: 0;
+  }
+
+  .newsletter-form input {
+    border-radius: 8px 0 0 8px;
+  }
+
+  .newsletter-form button {
+    border-radius: 0 8px 8px 0;
+  }
+
+  /* Author card */
+  .author-card {
+    padding: 1.2rem;
+  }
+
+  .author-card h6 {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .author-info p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .author-socials {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .social-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--content-bg);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text);
+    transition: var(--transition);
+    box-shadow: var(--shadow-neumorphism);
+  }
+
+  .social-icon:hover {
+    transform: translateY(-3px);
+    background: var(--gradient-1);
+    color: white;
+  }
+
+  /* Image zoom modal */
+  .image-zoom-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 3000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .image-zoom-modal .modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+  }
+
+  .image-zoom-modal img {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: var(--card-radius);
+    transition: transform 0.3s ease;
+  }
+
+  .image-zoom-modal .modal-actions {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+  }
+
+  .modal-action-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-neumorphism);
+  }
+
+  .modal-action-btn:hover {
+    transform: scale(1.1);
+    background: white;
+  }
+
+  .image-zoom-modal .close-btn {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Floating action button */
+  .fab-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+  }
+
+  .fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gradient-1);
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: var(--transition);
+  }
+
+  .fab:hover {
+    transform: scale(1.1);
+  }
+
+  .fab-menu {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: var(--transition);
+  }
+
+  .fab-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .fab-item {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--content-bg);
+    color: var(--text);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-neumorphism);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: var(--transition);
+  }
+
+  .fab-item:hover {
+    transform: scale(1.1);
+    background: var(--gradient-1);
+    color: white;
+  }
+
+  /* Reader mode */
+  body.reader-mode {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #f9f9f9;
+    color: #333;
+    font-family: 'Georgia', serif;
+    line-height: 1.8;
+  }
+
+  body.reader-mode .blog-shell {
+    padding: 2rem;
+  }
+
+  body.reader-mode .reading-box {
+    background: white;
+    border: none;
+    box-shadow: none;
+    padding: 2rem;
+    font-size: 1.1rem;
+  }
+
+  body.reader-mode .sidebar {
+    display: none;
+  }
+
+  /* Mobile */
   @media (max-width: 768px) {
-    .blog-content img, .blog-content figure.image { float: none !important; display: block !important; margin: 12px auto !important; max-width: 100% !important; }
-    .reading-box p:first-of-type::first-letter { font-size: 2.2rem; }
-    .reading-box { padding: 1rem; font-size: 1rem; line-height: 1.75; }
-    .blog-content h2 { font-size: 1.35rem; }
-    .blog-content h3 { font-size: 1.15rem; }
-    .blog-content blockquote { font-size: 1rem; padding: 1rem; }
-    /* stack reaction buttons on mobile */
-    .d-flex.justify-content-center.flex-wrap.gap-3 { flex-direction: column !important; gap: .6rem !important; }
-    .reaction-btn { width: 100%; justify-content: center; }
+    .blog-hero {
+      padding: 44px 0 18px;
+    }
+
+    .blog-hero.has-cover {
+      padding: 64px 0 20px;
+      min-height: 50vh;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+    }
+
+    .reading-box {
+      padding: 1rem;
+      font-size: 1rem;
+      line-height: 1.75;
+    }
+
+    .blog-content h2 {
+      font-size: 1.35rem;
+    }
+
+    .blog-content h3 {
+      font-size: 1.15rem;
+    }
+
+    .blog-content blockquote {
+      font-size: 1rem;
+      padding: 1rem;
+    }
+
+    .reactions-container {
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .reaction-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* floats off on mobile */
+    .blog-content img,
+    .blog-content figure.image {
+      float: none !important;
+      display: block !important;
+      margin: 12px auto !important;
+      max-width: 100% !important;
+    }
+
+    .toc-card {
+      position: static;
+    }
+
+    .share-buttons {
+      justify-content: center;
+    }
+
+    .fab-container {
+      bottom: 20px;
+      right: 20px;
+    }
   }
 
-  /* desktop enhancements */
-  @media (min-width: 992px) {
-    .reading-box { padding: 2rem; font-size: 1.08rem; }
-    .reaction-btn { padding: 0.6rem 1.2rem; }
+  /* Prefer-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
+    }
   }
-
 </style>
 
-<!-- DOM Normalizer: ensures editor-produced figures/images behave consistently -->
+<!-- ======== SCRIPTS ======== -->
 <script>
   (function () {
-    document.addEventListener('DOMContentLoaded', function () {
-      const content = document.querySelector('.blog-content');
-      if (!content) return;
-
-      // Normalize <figure> alignment classes to inline styles so CSS selectors apply reliably
-      content.querySelectorAll('figure').forEach(fig => {
-        const cls = (fig.className || '').toLowerCase();
-        try {
-          if (cls.includes('align-left') || cls.includes('image-style-align-left') || cls.includes('image-style-left')) {
-            fig.style.cssFloat = 'left';
-            fig.style.margin = '10px 20px 10px 0';
-            fig.style.maxWidth = '45%';
-          } else if (cls.includes('align-right') || cls.includes('image-style-align-right') || cls.includes('image-style-right')) {
-            fig.style.cssFloat = 'right';
-            fig.style.margin = '10px 0 10px 20px';
-            fig.style.maxWidth = '45%';
-          } else if (cls.includes('align-center') || cls.includes('image-style-align-center') || cls.includes('image-style-center')) {
-            fig.style.display = 'block';
-            fig.style.margin = '12px auto';
-            fig.style.maxWidth = '90%';
-            fig.style.textAlign = 'center';
-          }
-        } catch (e) { /* ignore style errors */ }
-      });
-
-      // Normalize <img> tags that have inline style strings (float / display / margin)
-      content.querySelectorAll('img').forEach(img => {
-        const styleAttr = img.getAttribute('style') || '';
-        const cls = (img.className || '').toLowerCase();
-
-        // If class based alignment present, apply inline style (helps some CSS resets)
-        if (cls.includes('alignleft') || cls.includes('align-left')) {
-          img.style.cssFloat = 'left';
-          img.style.margin = '10px 20px 10px 0';
-          img.style.maxWidth = '45%';
-        } else if (cls.includes('alignright') || cls.includes('align-right')) {
-          img.style.cssFloat = 'right';
-          img.style.margin = '10px 0 10px 20px';
-          img.style.maxWidth = '45%';
-        } else if (cls.includes('aligncenter') || cls.includes('align-center')) {
-          img.style.display = 'block';
-          img.style.margin = '12px auto';
-          img.style.maxWidth = '90%';
-        }
-
-        // If inline style contains float info, ensure CSS float is set
-        if (/float\s*:\s*left/.test(styleAttr)) {
-          img.style.cssFloat = 'left';
-          if (!img.style.margin) img.style.margin = '10px 20px 10px 0';
-          if (!img.style.maxWidth) img.style.maxWidth = '45%';
-        } else if (/float\s*:\s*right/.test(styleAttr)) {
-          img.style.cssFloat = 'right';
-          if (!img.style.margin) img.style.margin = '10px 0 10px 20px';
-          if (!img.style.maxWidth) img.style.maxWidth = '45%';
-        }
-
-        // If inline style suggests centering (display:block + margin:auto)
-        if (/display\s*:\s*block/.test(styleAttr) && /margin-left\s*:\s*auto/.test(styleAttr)) {
-          img.style.display = 'block';
-          img.style.marginLeft = 'auto';
-          img.style.marginRight = 'auto';
-          if (!img.style.maxWidth) img.style.maxWidth = '90%';
-        }
-
-        // Ensure images scale nicely on small screens (JS fallback)
-        img.style.maxWidth = img.style.maxWidth || '100%';
-        img.style.height = img.style.height || 'auto';
-      });
-
-      // Append a final clear fix (ensures things below don't wrap around floats)
-      let clearElem = content.querySelector('.content-clear');
-      if (!clearElem) {
-        clearElem = document.createElement('div');
-        clearElem.style.clear = 'both';
-        content.appendChild(clearElem);
-      }
-    });
-  })();
-</script>
-
-<!-- Minimal JS for Like/Bookmark/Share (keeps your original behaviour) -->
-<script>
-  (function () {
+    /* ---------- CSRF ---------- */
     function getCookie(name) {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
-      return null;
+      const v = `; ${document.cookie}`.split(`; ${name}=`); return v.length === 2 ? v.pop().split(";").shift() : null;
     }
-    const csrftoken = getCookie('csrftoken');
+    const csrftoken = getCookie("csrftoken");
+    const isAuth = {% if request.user.is_authenticated %}true{% else %} false{% endif %};
 
-    const likeBtn = document.getElementById('like-btn');
-    const likeCount = document.getElementById('like-count');
-    const bookmarkBtn = document.getElementById('bookmark-btn');
-    const isAuth = {{ request.user.is_authenticated|yesno:"true,false" }};
+  /* ---------- Progress Bar ---------- */
+  function onScrollProgress() {
+    const st = window.scrollY;
+    const max = document.body.scrollHeight - window.innerHeight;
+    const pct = Math.max(0, Math.min(100, (st / (max || 1)) * 100));
+    const bar = document.getElementById("progress-bar");
+    const indicator = document.getElementById("scroll-indicator");
+    if (bar) bar.style.width = pct + "%";
+    if (indicator) indicator.style.height = pct + "%";
+  }
+  document.addEventListener("scroll", onScrollProgress, { passive: true });
+  onScrollProgress();
 
-    if (likeBtn) {
-      likeBtn.addEventListener('click', async function () {
-        if (!isAuth) { window.location.href = "{% url 'login' %}?next={{ request.path }}"; return; }
-        likeBtn.disabled = true;
-        try {
-          const res = await fetch("{% url 'blog_like' blog.id %}", {
-            method: "POST",
-            headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" }
-          });
-          const data = await res.json();
-          if (res.ok) {
-            likeBtn.classList.toggle('active', data.liked === true);
-            likeBtn.setAttribute('aria-pressed', data.liked ? 'true' : 'false');
-            if (likeCount) likeCount.textContent = String(data.count || 0);
-          } else {
-            console.error('Like error', data);
-          }
-        } catch (e) {
-          console.error(e);
-        } finally {
-          likeBtn.disabled = false;
+  /* ---------- Reading Time ---------- */
+  function calcReadingTime() {
+    const content = document.querySelector(".blog-content");
+    if (!content) return;
+    const words = (content.innerText || "").trim().split(/\s+/).filter(Boolean).length;
+    const minutes = Math.max(1, Math.ceil(words / 200));
+    const rt = document.getElementById("reading-time");
+    if (rt) rt.textContent = `⏱ ${minutes} min read`;
+  }
+  document.addEventListener("DOMContentLoaded", calcReadingTime);
+
+  /* ---------- Hero Particles ---------- */
+  function createParticles() {
+    const particlesContainer = document.getElementById("hero-particles");
+    if (!particlesContainer) return;
+
+    const particleCount = 30;
+
+    for (let i = 0; i < particleCount; i++) {
+      const particle = document.createElement("div");
+      particle.className = "particle";
+
+      // Random size
+      const size = Math.random() * 8 + 3;
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+
+      // Random position
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${Math.random() * 100}%`;
+
+      // Random opacity
+      particle.style.opacity = Math.random() * 0.5 + 0.2;
+
+      // Random animation duration
+      const duration = Math.random() * 20 + 10;
+      particle.style.animation = `float ${duration}s infinite ease-in-out`;
+
+      // Random delay
+      particle.style.animationDelay = `${Math.random() * 5}s`;
+
+      particlesContainer.appendChild(particle);
+    }
+  }
+
+  // Add float animation
+  const style = document.createElement("style");
+  style.textContent = `
+      @keyframes float {
+        0%, 100% { transform: translateY(0) translateX(0); }
+        25% { transform: translateY(-20px) translateX(10px); }
+        50% { transform: translateY(0) translateX(20px); }
+        75% { transform: translateY(20px) translateX(10px); }
+      }
+    `;
+  document.head.appendChild(style);
+
+  document.addEventListener("DOMContentLoaded", createParticles);
+
+  /* ---------- Reaction Particles ---------- */
+  function createReactionParticles(button) {
+    const particlesContainer = button.querySelector(".reaction-particles");
+    if (!particlesContainer) return;
+
+    const particleCount = 15;
+    const color = window.getComputedStyle(button).getPropertyValue("color");
+
+    for (let i = 0; i < particleCount; i++) {
+      const particle = document.createElement("div");
+      particle.className = "reaction-particle";
+
+      // Random size
+      const size = Math.random() * 8 + 4;
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+
+      // Position at center of button
+      particle.style.left = "50%";
+      particle.style.top = "50%";
+
+      // Color
+      particle.style.background = color;
+
+      // Random direction
+      const angle = (Math.PI * 2 * i) / particleCount;
+      const velocity = Math.random() * 60 + 40;
+      const vx = Math.cos(angle) * velocity;
+      const vy = Math.sin(angle) * velocity;
+
+      // Animation
+      particle.animate([
+        { transform: "translate(-50%, -50%) scale(1)", opacity: 1 },
+        { transform: `translate(calc(-50% + ${vx}px), calc(-50% + ${vy}px)) scale(0)`, opacity: 0 }
+      ], {
+        duration: 1200,
+        easing: "cubic-bezier(0, .9, .57, 1)"
+      });
+
+      particlesContainer.appendChild(particle);
+
+      // Remove after animation
+      setTimeout(() => {
+        particle.remove();
+      }, 1200);
+    }
+  }
+
+  /* ---------- Normalize editor output (floats/figures) ---------- */
+  document.addEventListener("DOMContentLoaded", function () {
+    const content = document.querySelector('.blog-content');
+    if (!content) return;
+    content.querySelectorAll('figure').forEach(fig => {
+      const cls = (fig.className || '').toLowerCase();
+      try {
+        if (cls.includes('align-left') || cls.includes('image-style-align-left') || cls.includes('image-style-left')) {
+          fig.style.cssFloat = 'left'; fig.style.margin = '10px 20px 10px 0'; fig.style.maxWidth = '45%';
+        } else if (cls.includes('align-right') || cls.includes('image-style-align-right') || cls.includes('image-style-right')) {
+          fig.style.cssFloat = 'right'; fig.style.margin = '10px 0 10px 20px'; fig.style.maxWidth = '45%';
+        } else if (cls.includes('align-center') || cls.includes('image-style-align-center') || cls.includes('image-style-center')) {
+          fig.style.display = 'block'; fig.style.margin = '12px auto'; fig.style.maxWidth = '90%'; fig.style.textAlign = 'center';
+        }
+      } catch (e) { }
+    });
+    content.querySelectorAll('img').forEach(img => {
+      const styleAttr = img.getAttribute('style') || '';
+      const cls = (img.className || '').toLowerCase();
+      if (cls.includes('alignleft') || cls.includes('align-left')) {
+        img.style.cssFloat = 'left'; img.style.margin = '10px 20px 10px 0'; img.style.maxWidth = '45%';
+      } else if (cls.includes('alignright') || cls.includes('align-right')) {
+        img.style.cssFloat = 'right'; img.style.margin = '10px 0 10px 20px'; img.style.maxWidth = '45%';
+      } else if (cls.includes('aligncenter') || cls.includes('align-center')) {
+        img.style.display = 'block'; img.style.margin = '12px auto'; img.style.maxWidth = '90%';
+      }
+      if (/float\s*:\s*left/.test(styleAttr)) {
+        img.style.cssFloat = 'left'; if (!img.style.margin) img.style.margin = '10px 20px 10px 0'; if (!img.style.maxWidth) img.style.maxWidth = '45%';
+      } else if (/float\s*:\s*right/.test(styleAttr)) {
+        img.style.cssFloat = 'right'; if (!img.style.margin) img.style.margin = '10px 0 10px 20px'; if (!img.style.maxWidth) img.style.maxWidth = '45%';
+      }
+      if (/display\s*:\s*block/.test(styleAttr) && /margin-left\s*:\s*auto/.test(styleAttr)) {
+        img.style.display = 'block'; img.style.marginLeft = 'auto'; img.style.marginRight = 'auto'; if (!img.style.maxWidth) img.style.maxWidth = '90%';
+      }
+      img.style.maxWidth = img.style.maxWidth || '100%';
+      img.style.height = img.style.height || 'auto';
+    });
+  });
+
+  /* ---------- In-page TOC ---------- */
+  function slugify(str) {
+    return str.toLowerCase()
+      .replace(/<\/?[^>]+(>|$)/g, "")
+      .replace(/[^\w\s-]/g, '')
+      .trim().replace(/\s+/g, '-').slice(0, 64);
+  }
+  document.addEventListener("DOMContentLoaded", function () {
+    const content = document.querySelector(".blog-content");
+    const toc = document.getElementById("toc-list");
+    if (!content || !toc) return;
+    const headings = [...content.querySelectorAll("h2, h3")];
+    if (!headings.length) { toc.innerHTML = '<p class="text-muted small m-0">No headings</p>'; return; }
+    const ul = document.createElement("ul");
+    ul.className = "list-unstyled";
+    headings.forEach(h => {
+      if (!h.id) { h.id = slugify(h.textContent || 'section'); }
+      const li = document.createElement("li");
+      li.style.marginLeft = h.tagName === 'H3' ? "10px" : "0";
+      const a = document.createElement("a");
+      a.href = `#${h.id}`;
+      a.textContent = h.textContent;
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        document.getElementById(h.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        history.replaceState(null, "", `#${h.id}`);
+      });
+      li.appendChild(a); ul.appendChild(li);
+    });
+    toc.appendChild(ul);
+    // Active section highlight
+    const links = toc.querySelectorAll("a");
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === `#${entry.target.id}`));
         }
       });
-    }
-
-    if (bookmarkBtn) {
-      bookmarkBtn.addEventListener('click', async function () {
-        if (!isAuth) { window.location.href = "{% url 'login' %}?next={{ request.path }}"; return; }
-        bookmarkBtn.disabled = true;
-        try {
-          const res = await fetch("{% url 'blog_bookmark' blog.id %}", {
-            method: "POST",
-            headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" }
-          });
-          const data = await res.json();
-          if (res.ok) {
-            const active = data.bookmarked === true;
-            bookmarkBtn.classList.toggle('active', active);
-            bookmarkBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
-          } else {
-            console.error('Bookmark error', data);
-          }
-        } catch (e) {
-          console.error(e);
-        } finally {
-          bookmarkBtn.disabled = false;
-        }
+    }, { rootMargin: "-40% 0px -50% 0px", threshold: 0.01 });
+    headings.forEach(h => io.observe(h));
+    // Toggle for mobile
+    const toggle = document.getElementById("toc-toggle");
+    if (toggle) {
+      toggle.addEventListener("click", () => {
+        const open = toc.style.display !== "none";
+        toc.style.display = open ? "none" : "block";
+        toggle.setAttribute("aria-expanded", (!open).toString());
       });
-    }
-
-    window.shareBlog = async function () {
-      const shareData = {
-        title: "{{ blog.title|escapejs }}",
-        text: "Check out this blog!",
-        url: window.location.href
-      };
-      // native share
-      if (navigator.share) {
-        try { await navigator.share(shareData); } catch (e) { /* cancelled */ }
-      } else {
-        // fallback: copy url to clipboard and give quick feedback
-        try {
-          await navigator.clipboard.writeText(window.location.href);
-          const btn = document.getElementById('share-btn');
-          if (!btn) return;
-          const original = btn.innerHTML;
-          btn.innerHTML = "✅ Copied!";
-          setTimeout(() => btn.innerHTML = original, 1200);
-        } catch (e) {
-          // last resort alert
-          alert("Link: " + window.location.href);
-        }
+      // default collapsed on small screens
+      if (window.matchMedia("(max-width: 992px)").matches) {
+        toc.style.display = "none";
+        toggle.setAttribute("aria-expanded", "false");
       }
     }
-  })();
+  });
+
+  /* ---------- Like / Bookmark ---------- */
+  const likeBtn = document.getElementById("like-btn");
+  const likeCount = document.getElementById("like-count");
+  const bookmarkBtn = document.getElementById("bookmark-btn");
+  if (likeBtn) {
+    likeBtn.addEventListener("click", async () => {
+      if (!isAuth) { window.location.href = "{% url 'login' %}?next={{ request.path }}"; return; }
+      likeBtn.disabled = true;
+      createReactionParticles(likeBtn);
+      try {
+        const res = await fetch("{% url 'blog_like' blog.id %}", {
+          method: "POST", headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" }
+        });
+        const data = await res.json();
+        likeBtn.classList.toggle("active", !!data.liked);
+        likeBtn.setAttribute("aria-pressed", data.liked ? "true" : "false");
+        if (likeCount) likeCount.textContent = String(data.count || 0);
+      } catch (e) { console.error(e); }
+      finally { likeBtn.disabled = false; }
+    });
+  }
+  if (bookmarkBtn) {
+    bookmarkBtn.addEventListener("click", async () => {
+      if (!isAuth) { window.location.href = "{% url 'login' %}?next={{ request.path }}"; return; }
+      bookmarkBtn.disabled = true;
+      createReactionParticles(bookmarkBtn);
+      try {
+        const res = await fetch("{% url 'blog_bookmark' blog.id %}", {
+          method: "POST", headers: { "X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest" }
+        });
+        const data = await res.json();
+        const active = !!data.bookmarked;
+        bookmarkBtn.classList.toggle("active", active);
+        bookmarkBtn.setAttribute("aria-pressed", active ? "true" : "false");
+      } catch (e) { console.error(e); }
+      finally { bookmarkBtn.disabled = false; }
+    });
+  }
+
+  /* ---------- Share ---------- */
+  window.shareBlog = async function () {
+    const shareData = { title: "{{ blog.title|escapejs }}", text: "Check out this blog!", url: window.location.href };
+    if (navigator.share) { try { await navigator.share(shareData); } catch (e) { } }
+    else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        const btn = document.getElementById("share-btn");
+        const original = btn.innerHTML;
+        btn.innerHTML = "<span class='icon'>✅</span><span class='text'>Copied!</span>";
+        setTimeout(() => btn.innerHTML = original, 1200);
+      } catch (e) { alert("Link: " + window.location.href); }
+    }
+  };
+
+  // Sidebar quick shares
+  const enc = encodeURIComponent;
+  const url = enc(window.location.href);
+  const title = enc("{{ blog.title|escapejs }}");
+  const tw = document.getElementById("share-twitter");
+  const wa = document.getElementById("share-whatsapp");
+  const tg = document.getElementById("share-telegram");
+  if (tw) tw.href = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+  if (wa) wa.href = `https://wa.me/?text=${title}%20${url}`;
+  if (tg) tg.href = `https://t.me/share/url?url=${url}&text=${title}`;
+  const cpy = document.getElementById("btn-copy-link");
+  if (cpy) {
+    cpy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        cpy.innerHTML = "<span class='icon'>✅</span><span>Copied!</span>";
+        setTimeout(() => cpy.innerHTML = "<span class='icon'>📋</span><span>Copy Link</span>", 900);
+      } catch (e) { alert(window.location.href); }
+    });
+  }
+
+  /* ---------- Image Zoom ---------- */
+  let imageRotation = 0;
+
+  window.zoomImage = function (imageSrc) {
+    const modal = document.getElementById("image-zoom-modal");
+    const zoomedImage = document.getElementById("zoomed-image");
+
+    if (modal && zoomedImage) {
+      zoomedImage.src = imageSrc;
+      imageRotation = 0;
+      zoomedImage.style.transform = `rotate(0deg)`;
+      modal.style.display = "flex";
+      document.body.style.overflow = "hidden";
+    }
+  };
+
+  window.closeZoomModal = function () {
+    const modal = document.getElementById("image-zoom-modal");
+    if (modal) {
+      modal.style.display = "none";
+      document.body.style.overflow = "auto";
+    }
+  };
+
+  window.rotateImage = function () {
+    const zoomedImage = document.getElementById("zoomed-image");
+    if (zoomedImage) {
+      imageRotation = (imageRotation + 90) % 360;
+      zoomedImage.style.transform = `rotate(${imageRotation}deg)`;
+    }
+  };
+
+  window.downloadImage = function (imageSrc) {
+    const link = document.createElement("a");
+    link.href = imageSrc;
+    link.download = imageSrc.split('/').pop();
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  window.downloadZoomedImage = function () {
+    const zoomedImage = document.getElementById("zoomed-image");
+    if (zoomedImage) {
+      downloadImage(zoomedImage.src);
+    }
+  };
+
+  // Close modal when clicking outside the image
+  document.getElementById("image-zoom-modal")?.addEventListener("click", function (e) {
+    if (e.target === this) {
+      closeZoomModal();
+    }
+  });
+
+  // Close modal with Escape key
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closeZoomModal();
+    }
+  });
+
+  /* ---------- FAB Menu ---------- */
+  let fabMenuOpen = false;
+
+  window.toggleFabMenu = function () {
+    const fabMenu = document.querySelector(".fab-menu");
+    const mainFab = document.querySelector(".main-fab");
+
+    if (fabMenu) {
+      fabMenuOpen = !fabMenuOpen;
+      fabMenu.classList.toggle("active", fabMenuOpen);
+
+      // Rotate the main FAB icon
+      if (fabMenuOpen) {
+        mainFab.innerHTML = '<span class="icon">×</span>';
+      } else {
+        mainFab.innerHTML = '<span class="icon">+</span>';
+      }
+    }
+  };
+
+  window.scrollToTop = function () {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  };
+
+  window.toggleDarkMode = function () {
+    document.body.classList.toggle("dark-mode");
+    localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+  };
+
+  window.toggleReaderMode = function () {
+    document.body.classList.toggle("reader-mode");
+    localStorage.setItem("readerMode", document.body.classList.contains("reader-mode"));
+  };
+
+  // Check for saved preferences
+  if (localStorage.getItem("darkMode") === "true") {
+    document.body.classList.add("dark-mode");
+  }
+
+  if (localStorage.getItem("readerMode") === "true") {
+    document.body.classList.add("reader-mode");
+  }
+
+  /* ---------- Newsletter Form ---------- */
+  document.querySelector(".newsletter-form")?.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const email = this.querySelector('input[type="email"]').value;
+
+    // In a real implementation, you would send this to your backend
+    alert(`Thank you for subscribing with email: ${email}`);
+    this.reset();
+  });
+
+  /* ---------- Initialize AOS ---------- */
+  document.addEventListener("DOMContentLoaded", function () {
+    AOS.init({
+      duration: 800,
+      once: true,
+      offset: 100
+    });
+  });
+  }) ();
 </script>
 {% endblock %}
