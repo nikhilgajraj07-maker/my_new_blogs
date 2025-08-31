@@ -3,7 +3,6 @@
 {% block title %}Blog page{% endblock %}
 {% block pagecontent %}
 <style>
-    /* === Blog Cards === */
     .blog-card {
         border: none;
         border-radius: 15px;
@@ -14,30 +13,65 @@
         transition: transform .4s, box-shadow .4s;
         display: flex;
         flex-direction: column;
-        height: 100%;
+        height: 100%
     }
+
     .blog-card:hover {
         transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 10px 30px rgba(0, 123, 255, .3);
+        box-shadow: 0 10px 30px rgba(0, 123, 255, .3)
     }
+
     .blog-card img {
         border-top-left-radius: 15px;
         border-top-right-radius: 15px;
         transition: transform .4s;
         object-fit: cover;
-        width: 100%;
-        height: 200px;
+        width: 100%
     }
-    .blog-card:hover img { transform: scale(1.05); }
+
+    .blog-card:hover img {
+        transform: scale(1.05)
+    }
+
     .blog-card .card-title {
         font-size: 1.2rem;
         font-weight: 700;
         color: #007bff;
-        transition: color .3s;
+        transition: color .3s
     }
-    .blog-card:hover .card-title { color: #0056b3; }
 
-    /* === Blog Form === */
+    .blog-card:hover .card-title {
+        color: #0056b3
+    }
+
+    .blog-card small.text-muted {
+        font-style: italic;
+        font-size: .85rem;
+        color: #6c757d;
+        position: relative;
+        padding-left: 1.2rem
+    }
+
+    .blog-card small.text-muted::before {
+        content: '\f007';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        left: 0;
+        color: #007bff;
+        font-size: .9rem
+    }
+
+    .author-badge {
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        color: #fff;
+        font-size: .8rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 50px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .3)
+    }
+
     .form-container {
         background: #fff;
         padding: 20px;
@@ -47,101 +81,430 @@
         display: flex;
         flex-direction: column;
         position: relative;
-        z-index: 1;
+        z-index: 1
     }
+
     .form-container h2 {
         font-size: 1.4rem;
         font-weight: 600;
         margin-bottom: 15px;
         border-bottom: 2px solid #eee;
-        padding-bottom: 5px;
+        padding-bottom: 5px
     }
-    .form-container form { flex-grow: 1; display: flex; flex-direction: column; }
+
+    .form-container form {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column
+    }
+
+    input[name='author'],
     input[name='title'],
-    input[name='image'],
     textarea {
         border-radius: 8px !important;
         border: 1px solid #ccc !important;
-        padding: 8px 12px !important;
+        padding: 8px 12px !important
     }
 
-    /* === CKEditor === */
-    .ck.ck-editor { border: 1px solid #ddd; border-radius: 12px; display: flex; flex-direction: column; height: 100%; }
+    /* CKEditor skin + SCROLLER */
+    .ck.ck-editor {
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+
     .ck.ck-toolbar {
-        border-top-left-radius: 12px; border-top-right-radius: 12px;
-        position: sticky; top: 0; z-index: 50; background: #fff;
-        border-bottom: 1px solid #ddd; box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
-    }
-    .ck.ck-editor__main > .ck-editor__editable {
-        min-height: 340px; max-height: 420px; overflow-y: auto;
-        border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+        border-bottom: 1px solid #ddd;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        gap: 4px;
     }
 
-    /* === Dark Mode === */
-    #editor-card.editor-dark .ck.ck-editor { background: #1b1b1b; border-color: #2a2a2a; }
-    #editor-card.editor-dark .ck.ck-toolbar { background: #222; border-color: #2a2a2a; }
-    #editor-card.editor-dark .ck.ck-toolbar .ck-button .ck-button__label { color: #e6e6e6; }
-    #editor-card.editor-dark .ck.ck-toolbar .ck-button .ck-icon { filter: brightness(1.2); }
-    #editor-card.editor-dark .ck-content { background: #121212; color: #e6e6e6; }
-    #editor-card.editor-dark .ck.ck-editor__main { border-color: #2a2a2a; }
-
-    /* === Emoji & More Panels === */
-    .emoji-panel, .more-menu {
-        display: none; position: fixed; z-index: 99999; background: #fff;
-        border: 1px solid #ddd; border-radius: 10px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
-        padding: 8px; transition: opacity .2s ease, transform .2s ease;
-        opacity: 0; transform: translateY(-10px);
+    .ck.ck-editor__main {
+        position: relative;
+        overflow: hidden;
+        flex: 1;
     }
-    .emoji-panel[aria-hidden="false"], .more-menu[aria-hidden="false"] { opacity: 1; transform: translateY(0); }
-    .emoji-panel { max-width: 300px; max-height: 220px; overflow: auto; }
+
+    .ck.ck-editor__editable {
+        min-height: 340px;
+        max-height: 420px;
+        overflow-y: auto;
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+        padding: 16px;
+    }
+
+    /* Enhanced toolbar styling */
+    .ck.ck-toolbar .ck-button {
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        margin: 0 2px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ck.ck-toolbar .ck-button:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+    }
+
+    .ck.ck-toolbar .ck-button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+    }
+
+    .ck.ck-toolbar .ck-button.ck-on {
+        background-color: rgba(0, 123, 255, 0.15);
+        color: #0066cc;
+    }
+
+    .ck.ck-toolbar .ck-button.ck-on:hover {
+        background-color: rgba(0, 123, 255, 0.25);
+    }
+
+    .ck.ck-toolbar .ck.ck-button__label {
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    .ck.ck-toolbar .ck-toolbar__separator {
+        width: 1px;
+        height: 24px;
+        background: #dee2e6;
+        margin: 0 8px;
+        align-self: center;
+    }
+
+    .ck.ck-toolbar .ck-dropdown {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .ck.ck-toolbar .ck-dropdown .ck-button {
+        border-radius: 8px;
+    }
+
+    /* Toolbar grouping */
+    .ck.ck-toolbar .ck-toolbar__grouped-dropdown {
+        margin-right: 8px;
+    }
+
+    /* Custom toolbar sections */
+    .ck.ck-toolbar .ck-toolbar__section {
+        display: flex;
+        align-items: center;
+        margin: 0 4px;
+    }
+
+    /* Dark mode */
+    #editor-card.editor-dark .ck.ck-editor {
+        background: #1b1b1b;
+        border-color: #2a2a2a
+    }
+
+    #editor-card.editor-dark .ck.ck-toolbar {
+        background: linear-gradient(to bottom, #2a2a2a, #222);
+        border-color: #2a2a2a
+    }
+
+    #editor-card.editor-dark .ck.ck-toolbar .ck-button .ck-button__label {
+        color: #e6e6e6
+    }
+
+    #editor-card.editor-dark .ck.ck-toolbar .ck-button .ck-icon {
+        filter: brightness(1.2)
+    }
+
+    #editor-card.editor-dark .ck-content {
+        background: #121212;
+        color: #e6e6e6
+    }
+
+    #editor-card.editor-dark .ck.ck-editor__main {
+        border-color: #2a2a2a
+    }
+
+    #editor-card.editor-dark .ck.ck-toolbar .ck-toolbar__separator {
+        background: #444;
+    }
+
+    #editor-card.editor-dark .ck.ck-toolbar .ck-button:hover {
+        background-color: rgba(106, 158, 255, 0.15);
+        box-shadow: 0 4px 8px rgba(106, 158, 255, 0.2);
+    }
+
+    #editor-card.editor-dark .ck.ck-toolbar .ck-button.ck-on {
+        background-color: rgba(106, 158, 255, 0.25);
+        color: #a3d4ff;
+    }
+
+    /* Enhanced Emoji Panel Styling */
+    .emoji-panel {
+        display: none;
+        position: fixed;
+        z-index: 99999;
+        background: #fff;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        padding: 0;
+        width: 340px;
+        max-height: 380px;
+        overflow: hidden;
+        transform: translateY(-10px);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .emoji-panel[aria-hidden="false"] {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .emoji-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        color: white;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+    }
+
+    .emoji-panel-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .emoji-panel-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.2s ease;
+    }
+
+    .emoji-panel-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+    }
+
+    .emoji-panel-content {
+        padding: 12px;
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 8px;
+        max-height: 300px;
+        overflow-y: auto;
+        background: #f8f9fa;
+    }
+
     .emoji-panel button {
-        border: none; background: transparent; font-size: 20px;
-        line-height: 1.2; padding: 6px; border-radius: 8px; cursor: pointer;
-        transition: background-color .2s;
+        border: none;
+        background: white;
+        font-size: 20px;
+        line-height: 1.2;
+        padding: 8px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        z-index: 100000;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
-    .emoji-panel button:hover { background: #f1f3f5; }
-    .emoji-panel button:focus { outline: 2px solid #007bff; outline-offset: -2px; }
-    .more-menu { min-width: 200px; }
+
+    .emoji-panel button:hover {
+        background: #e7f1ff;
+        transform: scale(1.15);
+        box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+        z-index: 100001;
+    }
+
+    .emoji-panel button:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
+    }
+
+    .emoji-panel-footer {
+        padding: 8px 16px;
+        background: #f1f3f5;
+        border-bottom-left-radius: 16px;
+        border-bottom-right-radius: 16px;
+        text-align: center;
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    #editor-card.editor-dark .emoji-panel {
+        background: #2a2a2a;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    #editor-card.editor-dark .emoji-panel-header {
+        background: linear-gradient(135deg, #444, #222);
+    }
+
+    #editor-card.editor-dark .emoji-panel-content {
+        background: #1b1b1b;
+    }
+
+    #editor-card.editor-dark .emoji-panel button {
+        background: #333;
+        color: #e6e6e6;
+    }
+
+    #editor-card.editor-dark .emoji-panel button:hover {
+        background: #444;
+        box-shadow: 0 4px 10px rgba(106, 158, 255, 0.3);
+    }
+
+    #editor-card.editor-dark .emoji-panel-footer {
+        background: #222;
+        color: #adb5bd;
+    }
+
+    /* Improved More Menu Styling */
+    .more-menu {
+        min-width: 200px;
+        padding: 8px;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
     .more-menu button {
-        display: flex; align-items: center; width: 100%;
-        padding: 10px 12px; margin: 2px 0; border-radius: 8px;
-        font-size: 14px; font-weight: 500; text-align: left;
-        border: none; background: transparent; cursor: pointer;
-        transition: all .2s ease;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 10px 12px;
+        margin: 2px 0;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        text-align: left;
+        transition: all 0.2s ease;
+        border: none;
+        background: transparent;
+        cursor: pointer;
     }
-    .more-menu button:hover { background-color: #f0f7ff; transform: translateX(4px); }
-    .more-menu button span { margin-right: 10px; font-size: 18px; }
-    #editor-card.editor-dark .emoji-panel, #editor-card.editor-dark .more-menu {
-        background: #2a2a2a; border-color: #444; box-shadow: 0 4px 20px rgba(0,0,0,.4);
+
+    .more-menu button:hover {
+        background-color: #f0f7ff;
+        transform: translateX(4px);
+    }
+
+    .more-menu button:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.3);
+    }
+
+    .more-menu button span {
+        margin-right: 10px;
+        font-size: 18px;
+    }
+
+    #editor-card.editor-dark .more-menu {
+        background: #2a2a2a;
+        border-color: #444;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    #editor-card.editor-dark .more-menu button:hover {
+        background: #3a3a3a;
+    }
+
+    #editor-card.editor-dark .more-menu button:focus {
+        box-shadow: 0 0 0 2px rgba(106, 158, 255, 0.5);
     }
 
     @media (max-width:768px) {
-        .blog-card img { height: 160px !important; }
-        .form-container { padding: 15px; margin-top: 10px; }
-        .card-title { font-size: 1rem !important; }
-        .card-text { font-size: .85rem !important; }
-        .more-menu { min-width: 180px; }
-        .more-menu button { padding: 8px 10px; font-size: 13px; }
-        .more-menu button span { font-size: 16px; }
+        .blog-card img {
+            height: 160px !important
+        }
+
+        .form-container {
+            padding: 15px;
+            margin-top: 10px
+        }
+
+        .card-title {
+            font-size: 1rem !important
+        }
+
+        .card-text {
+            font-size: .85rem !important
+        }
+
+        .more-menu {
+            min-width: 180px;
+        }
+
+        .more-menu button {
+            padding: 8px 10px;
+            font-size: 13px;
+        }
+
+        .more-menu button span {
+            font-size: 16px;
+        }
+
+        .ck.ck-toolbar {
+            flex-wrap: wrap;
+            padding: 6px;
+        }
+
+        .ck.ck-toolbar .ck-toolbar__separator {
+            display: none;
+        }
+
+        .emoji-panel {
+            width: 300px;
+            max-height: 320px;
+        }
+
+        .emoji-panel-content {
+            grid-template-columns: repeat(7, 1fr);
+            max-height: 240px;
+        }
     }
 </style>
-
 <div class="container mt-2">
     <div class="row g-4 flex-column flex-lg-row">
-
         <!-- Saved Blogs -->
         <div class="col-lg-6 col-12">
             <h2 class="mb-3">Saved Blogs</h2>
             <div class="row" id="blog-list">
                 {% for blog in blogs|slice:':2' %}
                 <div class="col-12 mb-3 blog-item">
-                    <article class="card blog-card position-relative">
+                    <div class="card blog-card position-relative">
                         <a href="{% url 'blog_detail' blog.id %}">
                             {% if blog.image %}
-                                <img src="{{ blog.image.url }}" class="card-img-top" alt="{{ blog.title }}">
+                            <img src="{{ blog.image.url }}" class="card-img-top" alt="{{ blog.title }}"
+                                style="height:200px" />
                             {% else %}
-                                <img src="{% static 'images/default_blog.jpg' %}" class="card-img-top" alt="Default blog image">
+                            <img src="{% static 'images/default_blog.jpg' %}" class="card-img-top"
+                                alt="Default blog image" style="height:200px" />
                             {% endif %}
                         </a>
                         <div class="card-body d-flex flex-column justify-content-between">
@@ -151,142 +514,99 @@
                                         {{ blog.title|truncatechars:50 }}
                                     </a>
                                 </h5>
-                                <p class="card-text text-muted small">
-                                    {{ blog.content|striptags|truncatewords:20 }}
-                                </p>
+                                <p class="card-text text-muted small">{{ blog.content|striptags|truncatewords:20 }}</p>
                             </div>
-
                             {% if request.user == blog.author or request.user.is_staff %}
                             <div class="d-flex justify-content-between align-items-center mt-auto">
-                                <a href="{% url 'blog_edit' blog.id %}" class="btn btn-outline-warning btn-sm">✏ Edit</a>
+                                <a href="{% url 'blog_edit' blog.id %}" class="btn btn-outline-warning btn-sm">✏
+                                    Edit</a>
                                 <form action="{% url 'blog_delete' blog.id %}" method="post" class="d-inline">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-outline-danger btn-sm"
-                                            onclick="return confirm('Are you sure you want to delete this blog?');">🗑 Delete</button>
+                                        onclick="return confirm('Are you sure you want to delete this blog?');">🗑
+                                        Delete</button>
                                 </form>
                             </div>
                             {% endif %}
                         </div>
-                    </article>
+                    </div>
                 </div>
                 {% empty %}
                 <div class="text-center text-muted">No blogs yet.</div>
                 {% endfor %}
             </div>
-
             {% if blogs|length > 2 %}
             <div class="text-center mt-3">
                 <a href="{% url 'all_blogs' %}" class="btn btn-outline-primary btn-sm">See More</a>
             </div>
             {% endif %}
         </div>
-
         <!-- Blog Entry Form -->
         <div class="col-lg-6 col-12">
             <div class="form-container" id="editor-card">
                 <h2>Write a New Blog</h2>
-
-                {% if form.non_field_errors %}
-                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-                {% endif %}
-
                 <form method="POST" enctype="multipart/form-data" id="blog-entry-form">
                     {% csrf_token %}
-
-                    <div class="mb-3">
-                        {{ form.title.label_tag }}
-                        {{ form.title }}
-                        {% if form.title.errors %}
-                            <div class="text-danger small">{{ form.title.errors }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form.image.label_tag }}
-                        {{ form.image }}
-                        {% if form.image.errors %}
-                            <div class="text-danger small">{{ form.image.errors }}</div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Hidden Django field -->
-                    <textarea name="content" id="id_content" hidden></textarea>
-
-                    <!-- CKEditor mount with escaped initial content -->
-                    <div id="editor" data-initial="{{ form.content.value|default_if_none:''|escape }}"></div>
-
-                    <!-- Indicators -->
-                    <div id="word-count" class="text-muted small mt-2" aria-live="polite"></div>
-                    <div id="autosave-indicator" class="text-muted small mt-1" aria-live="polite"></div>
-
+                    <div class="mb-3">{{ form.title.label_tag }} {{ form.title }}</div>
+                    <div class="mb-3">{{ form.image.label_tag }} {{ form.image }}</div>
+                    <!-- Hidden Django field to submit HTML -->
+                    <textarea name="content" id="id_content"
+                        style="display:none;">{{ form.content.value|default_if_none:'' }}</textarea>
+                    <!-- CKEditor mount -->
+                    <div id="editor">{{ form.content.value|default_if_none:''|safe }}</div>
+                    <div id="word-count" class="text-muted small mt-2"></div>
                     <button type="submit" class="btn btn-primary w-100 mt-3">Publish Blog</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
 <script>
-(function () {
     document.addEventListener('DOMContentLoaded', function () {
-        var hiddenField = document.getElementById('id_content');
-        var autosaveEl  = document.getElementById('autosave-indicator');
-        var mountEl     = document.getElementById('editor');
-        var editorCard  = document.getElementById('editor-card');
-        var wordCountEl = document.getElementById('word-count');
-        var form        = document.getElementById('blog-entry-form');
-
-        // Accept only images in the file input (client hint)
-        var imageInput = document.querySelector("input[name='image']");
-        if (imageInput) imageInput.setAttribute('accept', 'image/*');
-
+        const hiddenField = document.getElementById('id_content');
+        const autosaveEl = document.getElementById('autosave-indicator');
+        const mountEl = document.getElementById('editor');
+        const editorCard = document.getElementById('editor-card');
+        const wordCountEl = document.getElementById('word-count');
+        if (!(window.CKEDITOR && CKEDITOR.ClassicEditor)) {
+            console.error('CKEditor 5 super-build not loaded (check base.html include).');
+            return;
+        }
         // Dark theme boot
-        var THEME_KEY  = 'blog_editor_theme';
-        var savedTheme = localStorage.getItem(THEME_KEY);
+        const THEME_KEY = 'blog_editor_theme';
+        const savedTheme = localStorage.getItem(THEME_KEY);
         if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             editorCard.classList.add('editor-dark');
         }
-
-        // CSRF helper
+        // Django CSRF
         function getCookie(name) {
-            var value = '; ' + document.cookie;
-            var parts = value.split('; ' + name + '=');
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
         }
-        var CSRF = getCookie('csrftoken');
-
-        // Fallback if CKEditor is not loaded
-        if (!(window.CKEDITOR && CKEDITOR.ClassicEditor)) {
-            console.error('CKEditor 5 super-build not loaded (check base.html include).');
-            if (hiddenField) {
-                hiddenField.removeAttribute('hidden');
-                hiddenField.style.display = 'block';
-                hiddenField.value = (mountEl && mountEl.getAttribute('data-initial')) || '';
-            }
-            if (mountEl) mountEl.style.display = 'none';
-            return;
-        }
-
+        const CSRF = getCookie('csrftoken');
         CKEDITOR.ClassicEditor.create(mountEl, {
             placeholder: '✍️ Start writing your blog...',
             toolbar: {
                 items: [
-                    'heading','|',
-                    'bold','italic','underline','strikethrough','link','highlight','removeFormat','|',
-                    'fontFamily','fontSize','fontColor','fontBackgroundColor','alignment','|',
-                    'bulletedList','numberedList','outdent','indent','|',
-                    'blockQuote','insertTable','mediaEmbed','horizontalLine','|',
-                    'uploadImage','imageInsert','|',
-                    'specialCharacters','findAndReplace','|',
-                    'code','codeBlock','sourceEditing','|',
-                    'undo','redo'
+                    'undo', 'redo', '|',
+                    'heading', '|',
+                    'bold', 'italic', 'underline', 'strikethrough', 'removeFormat', '|',
+                    'bulletedList', 'numberedList', 'outdent', 'indent', '|',
+                    'alignment', '|',
+                    'link', 'imageInsert', 'mediaEmbed', 'insertTable', 'horizontalLine', '|',
+                    'fontFamily', 'fontSize', 'fontColor', 'fontBackgroundColor', 'highlight', '|',
+                    'blockQuote', 'code', 'codeBlock', '|',
+                    'findAndReplace', 'specialCharacters', 'sourceEditing', '|',
+                    /* we will inject the "⋯" button here with JS */
+                    'undo', 'redo'
                 ],
                 shouldNotGroupWhenFull: true
             },
             image: {
                 toolbar: [
-                    'imageTextAlternative','toggleImageCaption',
-                    'imageStyle:inline','imageStyle:block','imageStyle:side'
+                    'imageTextAlternative', 'toggleImageCaption',
+                    'imageStyle:inline', 'imageStyle:block', 'imageStyle:side'
                 ],
                 insert: { type: 'auto' }
             },
@@ -299,168 +619,244 @@
             },
             table: {
                 contentToolbar: [
-                    'tableColumn','tableRow','mergeTableCells',
-                    'tableCellProperties','tableProperties'
+                    'tableColumn', 'tableRow', 'mergeTableCells',
+                    'tableCellProperties', 'tableProperties'
                 ]
             },
             removePlugins: [
-                'CKBox','CKFinder','EasyImage',
-                'ExportPdf','ExportWord',
-                'WProofreader','MathType',
-                'SlashCommand','Template',
-                'PresenceList','Comments','TrackChanges','RevisionHistory',
-                'RealTimeCollaborativeComments','RealTimeCollaborativeTrackChanges','RealTimeCollaborativeRevisionHistory','Pagination','DocumentOutline'
+                'CKBox', 'CKFinder', 'EasyImage',
+                'ExportPdf', 'ExportWord',
+                'WProofreader', 'MathType',
+                'SlashCommand', 'Template', 'DocumentOutline', 'FormatPainter', 'TableOfContents',
+                'Pagination', 'MultiLevelList', 'CaseChange', 'CaseChangeEditing',
+                'PresenceList', 'Comments', 'TrackChanges', 'TrackChangesData', 'RevisionHistory',
+                'RealTimeCollaborativeComments', 'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory',
+                'AiAssistant', 'AIAssistant', 'CKEditorAI',
+                'PasteFromOfficeEnhanced', 'Mermaid'
             ],
             wordCount: {
-                onUpdate: function (stats) {
+                onUpdate: stats => {
                     if (wordCountEl) {
-                        wordCountEl.textContent = 'Words: ' + stats.words + ' · Characters: ' + stats.characters;
+                        wordCountEl.textContent = `Words: ${stats.words} · Characters: ${stats.characters}`;
                     }
                 }
             }
-        }).then(function (editor) {
-            window.editor = editor;
+        })
+            .then((editor) => {
+                window.editor = editor;
 
-            // Initial data: server value > draft
-            var blogId   = "{{ form.instance.id|default:'' }}";
-            var draftKey = blogId ? ('blog_draft_' + blogId) : 'blog_draft_new';
-            var initial  = (mountEl && mountEl.getAttribute('data-initial')) || '';
-            var draft    = localStorage.getItem(draftKey);
-            var startData = initial || draft || '';
-            editor.setData(startData);
-            if (hiddenField) hiddenField.value = startData;
-            if (autosaveEl) autosaveEl.textContent = (draft && !initial) ? 'Draft: restored' : 'Draft: —';
+                // Fix toolbar scrolling issue
+                const editorElement = editor.ui.view.element;
+                const toolbarElement = editor.ui.view.toolbar.element;
 
-            // Emoji panel
-            var emojiPanel = document.createElement('div');
-            emojiPanel.className = 'emoji-panel';
-            emojiPanel.setAttribute('aria-hidden', 'true');
-            var EMOJIS = "😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😇 😍 🤩 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤗 🤔 🤨 😐 😑 😶 🙄 😏 😣 😥 😮 🤐 😯 😪 😫 🥱 😴 😌 🤤 😒 😓 😔 😕 🥲 😬 🤥 😶‍🌫️ 🥹 🥰 😻 👍 👎 👏 🙌 🤝 💪 ✍️ ✅ ❌ ✨ ❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 💯 🔥 🎉 🥳 ⭐".split(' ');
-            emojiPanel.innerHTML = EMOJIS.map(function (e) {
-                return '<button type="button" aria-label="Insert emoji ' + e + '">' + e + '</button>';
-            }).join('');
-            document.body.appendChild(emojiPanel);
+                // Make sure the editor has proper positioning context
+                editorElement.style.position = 'relative';
 
-            // More menu
-            var morePanel = document.createElement('div');
-            morePanel.className = 'more-menu';
-            morePanel.setAttribute('aria-hidden', 'true');
-            morePanel.innerHTML =
-                '<button type="button" data-action="emoji"><span>😀</span> Insert Emoji</button>' +
-                '<button type="button" data-action="dark"><span>🌙</span> Toggle Dark Mode</button>';
-            document.body.appendChild(morePanel);
+                // Ensure the toolbar stays fixed when scrolling
+                toolbarElement.style.position = 'sticky';
+                toolbarElement.style.top = '0';
+                toolbarElement.style.zIndex = '100';
 
-            // Inject ⋯ button before Undo (fallback: append)
-            var toolbarEl = editor.ui.view.toolbar.element;
-            var undoBtn   = toolbarEl.querySelector('button[aria-label="Undo"]');
-            var moreBtn   = document.createElement('button');
-            moreBtn.type = 'button';
-            moreBtn.className = 'ck ck-button ck-button_with-text';
-            moreBtn.setAttribute('aria-label', 'More');
-            moreBtn.setAttribute('title', 'More');
-            moreBtn.setAttribute('aria-expanded', 'false');
-            moreBtn.innerHTML = '<span class="ck-button__label">⋯</span>';
-            if (undoBtn && undoBtn.parentNode) { undoBtn.parentNode.insertBefore(moreBtn, undoBtn); }
-            else { toolbarEl.appendChild(moreBtn); }
+                // Adjust the editable area to account for the sticky toolbar
+                const editableElement = editor.ui.view.editable.element;
+                editableElement.style.overflowY = 'auto';
+                editableElement.style.maxHeight = '420px';
 
-            function hidePanels() {
-                morePanel.style.display = 'none';
-                emojiPanel.style.display = 'none';
-                morePanel.setAttribute('aria-hidden', 'true');
+                /* ---------- Build the enhanced emoji panel ---------- */
+                const emojiPanel = document.createElement('div');
+                emojiPanel.className = 'emoji-panel';
                 emojiPanel.setAttribute('aria-hidden', 'true');
-                moreBtn.setAttribute('aria-expanded', 'false');
-            }
 
-            moreBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                hidePanels();
-                var r = moreBtn.getBoundingClientRect();
+                // Create header
+                const header = document.createElement('div');
+                header.className = 'emoji-panel-header';
+                header.innerHTML = `
+                    <h3 class="emoji-panel-title">Select Emoji</h3>
+                    <button class="emoji-panel-close" aria-label="Close emoji panel">✕</button>
+                `;
 
-                // temporarily show to measure width
-                morePanel.style.display = 'block';
-                var width = morePanel.offsetWidth || 200;
-                morePanel.style.display = 'none';
+                // Create content area
+                const content = document.createElement('div');
+                content.className = 'emoji-panel-content';
 
-                morePanel.style.top  = (r.bottom + 4) + 'px';
-                morePanel.style.left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8)) + 'px';
-                morePanel.style.display = 'block';
-                morePanel.setAttribute('aria-hidden', 'false');
-                moreBtn.setAttribute('aria-expanded', 'true');
-                var firstBtn = morePanel.querySelector('button');
-                if (firstBtn) firstBtn.focus();
-            });
+                // Create footer
+                const footer = document.createElement('div');
+                footer.className = 'emoji-panel-footer';
+                footer.textContent = 'Click an emoji to insert it into your blog';
 
-            morePanel.addEventListener('click', function (e) {
-                var btn = e.target.closest('button'); if (!btn) return;
-                if (btn.dataset.action === 'emoji') {
-                    hidePanels();
-                    var r = btn.getBoundingClientRect();
+                // Add emojis to content
+                const EMOJIS = "😀 😃 😄 😁 😆 😅 😂 🙂 🙃 😉 😊 😇 😍 🤩 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤗 🤔 🤨 😐 😑 😶 🙄 😏 😣 😥 😮 🤐 😯 😪 😫 🥱 😴 😌 🤤 😒 😓 😔 😕 🥲 😬 🤥 😶‍🌫️ 🥹 🥰 😻 👍 👎 👏 🙌 🤝 💪 ✍️ ✅ ❌ ✨ ❤️ 🧡 💛 💚 💙 💜 🤎 🖤 🤍 💯 🔥 🎉 🥳 ⭐".split(' ');
+                content.innerHTML = EMOJIS.map(e => `<button type="button" aria-label="${e}">${e}</button>`).join('');
 
-                    // temporarily show to measure width
-                    emojiPanel.style.display = 'block';
-                    var width = emojiPanel.offsetWidth || 300;
-                    emojiPanel.style.display = 'none';
+                // Assemble the panel
+                emojiPanel.appendChild(header);
+                emojiPanel.appendChild(content);
+                emojiPanel.appendChild(footer);
+                document.body.appendChild(emojiPanel);
 
-                    emojiPanel.style.top  = r.top + 'px';
-                    emojiPanel.style.left = Math.min(r.right + 4, window.innerWidth - width - 8) + 'px';
-                    emojiPanel.style.display = 'block';
-                    emojiPanel.setAttribute('aria-hidden', 'false');
-                    var eb = emojiPanel.querySelector('button');
-                    if (eb) eb.focus();
+                /* ---------- Improved More Menu ---------- */
+                const morePanel = document.createElement('div');
+                morePanel.className = 'emoji-panel more-menu';
+                morePanel.setAttribute('aria-hidden', 'true');
+                morePanel.innerHTML = `
+                    <button type="button" data-action="emoji">
+                        <span>😀</span> Insert Emoji
+                    </button>
+                    <button type="button" data-action="dark">
+                        <span>🌙</span> Toggle Dark Mode
+                    </button>`;
+                document.body.appendChild(morePanel);
 
-                } else if (btn.dataset.action === 'dark') {
-                    editorCard.classList.toggle('editor-dark');
-                    localStorage.setItem(THEME_KEY, editorCard.classList.contains('editor-dark') ? 'dark' : 'light');
-                    hidePanels();
+                /* ---------- Inject the ⋯ button BEFORE Undo/Redo ---------- */
+                const toolbarEl = editor.ui.view.toolbar.element;
+                const undoBtn = toolbarEl.querySelector('button[aria-label="Undo"]');
+                const moreBtn = document.createElement('button');
+                moreBtn.type = 'button';
+                moreBtn.className = 'ck ck-button ck-button_with-text';
+                moreBtn.setAttribute('aria-label', 'More');
+                moreBtn.setAttribute('title', 'More');
+                moreBtn.innerHTML = '<span class="ck-button__label">⋯</span>';
+                if (undoBtn && undoBtn.parentNode) {
+                    undoBtn.parentNode.insertBefore(moreBtn, undoBtn);
+                } else {
+                    toolbarEl.appendChild(moreBtn);
                 }
-            });
 
-            emojiPanel.addEventListener('click', function (e) {
-                var button = e.target.closest('button'); if (!button) return;
-                var emoji = button.textContent;
-                editor.editing.view.focus();
-                editor.model.change(function (writer) {
-                    var pos = editor.model.document.selection.getFirstPosition();
-                    writer.insertText(emoji, pos);
-                });
-                hidePanels();
-            });
-
-            document.addEventListener('click', function (e) {
-                if (!morePanel.contains(e.target) && !emojiPanel.contains(e.target) && e.target !== moreBtn) {
-                    hidePanels();
-                }
-            });
-            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hidePanels(); });
-
-            // Sync hidden field + autosave
-            var t;
-            editor.model.document.on('change:data', function () {
-                var data = editor.getData();
-                if (hiddenField) hiddenField.value = data;
-                clearTimeout(t);
-                t = setTimeout(function () {
-                    try {
-                        localStorage.setItem(draftKey, data);
-                        if (autosaveEl) autosaveEl.textContent = 'Draft: saved locally ✔';
-                    } catch (e) {}
-                }, 400);
-            });
-
-            // Submit: wait for uploads
-            var pending = editor.plugins.get('PendingActions');
-            form.addEventListener('submit', function (e) {
-                if (hiddenField) hiddenField.value = editor.getData();
-                if (pending && pending.hasAny) {
+                /* ---------- Wire the ⋯ button ---------- */
+                moreBtn.addEventListener('click', (e) => {
                     e.preventDefault();
-                    alert('Please wait for uploads to finish…');
-                    return;
+                    e.stopPropagation();
+                    // Close all panels first
+                    morePanel.style.display = 'none';
+                    emojiPanel.style.display = 'none';
+                    morePanel.setAttribute('aria-hidden', 'true');
+                    emojiPanel.setAttribute('aria-hidden', 'true');
+                    // Get button position relative to viewport
+                    const btnRect = moreBtn.getBoundingClientRect();
+                    // Calculate position for the menu
+                    const top = btnRect.bottom + window.scrollY + 4;
+                    let left = btnRect.left + window.scrollX;
+                    // Check if menu would go off-screen right
+                    if (left + 200 > window.innerWidth) {
+                        left = window.innerWidth - 220;
+                    }
+                    // Position and show the menu
+                    morePanel.style.position = 'fixed';
+                    morePanel.style.top = `${top}px`;
+                    morePanel.style.left = `${left}px`;
+                    morePanel.style.display = 'block';
+                    morePanel.setAttribute('aria-hidden', 'false');
+                });
+
+                /* ---------- Actions in the More menu ---------- */
+                morePanel.addEventListener('click', (e) => {
+                    const btn = e.target.closest('button');
+                    if (!btn) return;
+                    if (btn.dataset.action === 'emoji') {
+                        // Get editor container position
+                        const editorRect = editorElement.getBoundingClientRect();
+
+                        // Calculate center position of the editor
+                        const editorCenterX = editorRect.left + editorRect.width / 2;
+                        const editorCenterY = editorRect.top + editorRect.height / 2;
+
+                        // Calculate emoji panel position (centered on editor)
+                        const panelWidth = 340;
+                        const panelHeight = 380;
+
+                        let left = editorCenterX - panelWidth / 2;
+                        let top = editorCenterY - panelHeight / 2;
+
+                        // Adjust if panel goes off-screen
+                        if (left < 10) left = 10;
+                        if (left + panelWidth > window.innerWidth - 10) {
+                            left = window.innerWidth - panelWidth - 10;
+                        }
+                        if (top < 10) top = 10;
+                        if (top + panelHeight > window.innerHeight - 10) {
+                            top = window.innerHeight - panelHeight - 10;
+                        }
+
+                        // Position and show the emoji panel
+                        emojiPanel.style.position = 'fixed';
+                        emojiPanel.style.top = `${top}px`;
+                        emojiPanel.style.left = `${left}px`;
+                        emojiPanel.style.display = 'block';
+                        emojiPanel.setAttribute('aria-hidden', 'false');
+
+                        // Close the more menu
+                        morePanel.style.display = 'none';
+                        morePanel.setAttribute('aria-hidden', 'true');
+                    } else if (btn.dataset.action === 'dark') {
+                        editorCard.classList.toggle('editor-dark');
+                        localStorage.setItem('blog_editor_theme',
+                            editorCard.classList.contains('editor-dark') ? 'dark' : 'light');
+                        morePanel.style.display = 'none';
+                        morePanel.setAttribute('aria-hidden', 'true');
+                    }
+                });
+
+                /* ---------- Emoji click inserts into editor ---------- */
+                emojiPanel.addEventListener('click', (e) => {
+                    const button = e.target.closest('button');
+                    if (!button) return;
+                    const emoji = button.textContent;
+                    editor.editing.view.focus();
+                    editor.model.change(writer => {
+                        const position = editor.model.document.selection.getFirstPosition();
+                        writer.insertText(emoji, position);
+                    });
+                    emojiPanel.style.display = 'none';
+                    emojiPanel.setAttribute('aria-hidden', 'true');
+                });
+
+                /* ---------- Close panels on outside click ---------- */
+                document.addEventListener('click', (e) => {
+                    if (!morePanel.contains(e.target) && !emojiPanel.contains(e.target) && e.target !== moreBtn) {
+                        morePanel.style.display = 'none';
+                        morePanel.setAttribute('aria-hidden', 'true');
+                        emojiPanel.style.display = 'none';
+                        emojiPanel.setAttribute('aria-hidden', 'true');
+                    }
+                });
+
+                /* ---------- Close button in emoji panel ---------- */
+                const closeBtn = emojiPanel.querySelector('.emoji-panel-close');
+                closeBtn.addEventListener('click', () => {
+                    emojiPanel.style.display = 'none';
+                    emojiPanel.setAttribute('aria-hidden', 'true');
+                });
+
+                /* ---------- preload / autosave ---------- */
+                if (hiddenField && hiddenField.value) editor.setData(hiddenField.value);
+                const blogId = "{{ form.instance.id|default:'' }}";
+                const draftKey = blogId ? ('blog_draft_' + blogId) : 'blog_draft_new';
+                if ((!hiddenField || !hiddenField.value) && localStorage.getItem(draftKey)) {
+                    editor.setData(localStorage.getItem(draftKey));
+                    if (autosaveEl) autosaveEl.textContent = 'Draft: restored';
+                } else {
+                    if (autosaveEl) autosaveEl.textContent = 'Draft: —';
                 }
-                localStorage.removeItem(draftKey);
-            });
-        }).catch(function (err) { console.error(err); });
+                let t;
+                editor.model.document.on('change:data', () => {
+                    if (hiddenField) hiddenField.value = editor.getData();
+                    clearTimeout(t);
+                    t = setTimeout(() => {
+                        try {
+                            localStorage.setItem(draftKey, editor.getData());
+                            if (autosaveEl) autosaveEl.textContent = 'Draft: saved locally ✔';
+                        } catch (e) { }
+                    }, 400);
+                });
+                const form = document.getElementById('blog-entry-form');
+                if (form) {
+                    form.addEventListener('submit', () => {
+                        if (hiddenField) hiddenField.value = editor.getData();
+                        localStorage.removeItem(draftKey);
+                    });
+                }
+            })
+            .catch((err) => console.error(err));
     });
-})();
 </script>
 {% endblock %}
