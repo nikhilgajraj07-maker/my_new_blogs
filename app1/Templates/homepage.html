@@ -499,7 +499,7 @@
         {% endif %}
         <div class="carousel-caption">
           <h5 class="fw-bold">{{ s.title }}</h5>
-          <p class="mb-1">{{ s.content|truncatewords:18 }}</p>
+          <p class="mb-1">{{ s.content|truncatewords:18|safe }}</p>
           <span class="meta">By {{ s.author.get_full_name|default:s.author.username|escape }}</span>
           <br>
           <a href="{% url 'blog_detail' s.id %}" class="btn btn-sm mt-2"
