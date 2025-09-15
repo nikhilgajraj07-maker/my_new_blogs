@@ -546,7 +546,7 @@
 
       <div class="card-body">
         <h3 id="btitle-{{ forloop.counter }}" class="card-title">{{ blog.title }}</h3>
-        <p class="card-excerpt">{{ blog.content|truncatewords:22 }}</p>
+        <p class="card-excerpt">{{ blog.content|truncatewords:22|safe }}</p>
         <div class="author-meta">By {{ blog.author.get_full_name|default:blog.author.username|escape }}</div>
 
         <div style="display:flex;gap:.5rem;align-items:center;">
